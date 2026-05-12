@@ -203,6 +203,47 @@ describe("renderDocx", () => {
     expect(documentXml).toContain("表 自定义表题");
   });
 
+  it("renders code blocks as centered wide textboxes with left-aligned content", async () => {
+    const template = {
+      ...cauCoursePaperTemplate,
+      codeBlock: {
+        ...cauCoursePaperTemplate.codeBlock,
+        fontFamily: "Consolas",
+        fontSizePt: 9,
+        widthCm: 12,
+        spacingBeforePt: 8,
+        spacingAfterPt: 10
+      }
+    };
+    const model: DocumentModel = {
+      nodes: [
+        {
+          type: "code",
+          language: "ts",
+          value: "function main() {\n  return 1;\n}"
+        }
+      ]
+    };
+
+    const bytes = await renderDocx({ model, template, assets: [] });
+    const zip = await JSZip.loadAsync(bytes);
+    const documentXml = await zip.file("word/document.xml")!.async("string");
+
+    expect(documentXml).toContain("<w:pict>");
+    expect(documentXml).toContain("<v:textbox");
+    expect(documentXml).toContain("width:12.00cm");
+    expect(documentXml).toContain('mso-position-horizontal:center');
+    expect(documentXml).toContain('w:val="center"');
+    expect(documentXml).toContain('w:val="left"');
+    expect(documentXml).toContain('w:before="160"');
+    expect(documentXml).toContain('w:after="200"');
+    expect(documentXml).toContain('w:sz w:val="18"');
+    expect(documentXml).toContain('w:ascii="Consolas"');
+    expect(documentXml).toContain('w:hAnsi="Consolas"');
+    expect(documentXml).toContain("function main()");
+    expect(documentXml).toContain("return 1;");
+  });
+
   it("uses configurable figure and table caption fonts", async () => {
     const template = {
       ...cauCoursePaperTemplate,

@@ -8,7 +8,9 @@ import {
   Table,
   TableCell,
   TableRow,
+  Textbox,
   TextRun,
+  type UniversalMeasure,
   WidthType
 } from "docx";
 import JSZip from "jszip";
@@ -74,7 +76,7 @@ function renderNode(
   template: FormatTemplate,
   assets: DocumentAsset[],
   context: RenderContext
-): Array<Paragraph | Table> {
+): Array<Paragraph | Table | Textbox> {
   switch (node.type) {
     case "heading":
       return [
@@ -90,7 +92,7 @@ function renderNode(
     case "blockquote":
       return [paragraph(node.text, { ...template.styles.body, firstLineIndentChars: 0 }, "BodyText", template)];
     case "code":
-      return [paragraph(node.value, { ...template.styles.body, fontFamily: "Courier New", firstLineIndentChars: 0 }, "BodyText", template)];
+      return [codeTextbox(node.value, template)];
     case "list":
       return node.items.map((item, index) =>
         paragraph(`${node.ordered ? `${index + 1}.` : "•"} ${item}`, {
@@ -189,6 +191,65 @@ function paragraph(
     },
     children: [new TextRun(runOptions(text, style, template))]
   });
+}
+
+function codeTextbox(text: string, template: FormatTemplate): Textbox {
+  const contentWidthCm =
+    PAGE_WIDTH_CM - template.page.marginLeftCm - template.page.marginRightCm;
+  const widthCm = Math.min(template.codeBlock.widthCm, contentWidthCm);
+  const codeStyle: ParagraphStyle = {
+    ...template.styles.body,
+    fontFamily: template.codeBlock.fontFamily,
+    fontSizePt: template.codeBlock.fontSizePt,
+    alignment: "left",
+    lineSpacingPt: undefined,
+    firstLineIndentChars: 0,
+    spacingBeforePt: 0,
+    spacingAfterPt: 0
+  };
+  const width: UniversalMeasure = `${widthCm.toFixed(2)}cm` as UniversalMeasure;
+
+  return new Textbox({
+    alignment: AlignmentType.CENTER,
+    spacing: {
+      before: Math.round(template.codeBlock.spacingBeforePt * 20),
+      after: Math.round(template.codeBlock.spacingAfterPt * 20)
+    },
+    style: {
+      width,
+      position: "relative",
+      positionHorizontal: "center",
+      positionHorizontalRelative: "text",
+      wrapStyle: "none"
+    },
+    children: codeLines(text).map(
+      (line) =>
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 0, after: 0 },
+          indent: { firstLine: 0 },
+          children: [new TextRun(codeRunOptions(line || " ", codeStyle))]
+        })
+    )
+  });
+}
+
+function codeLines(text: string): string[] {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  return lines.length ? lines : [""];
+}
+
+function codeRunOptions(text: string, style: ParagraphStyle) {
+  return {
+    text,
+    color: style.color ?? "000000",
+    size: ptToHalfPoint(style.fontSizePt),
+    font: {
+      ascii: style.fontFamily,
+      eastAsia: style.fontFamily,
+      hAnsi: style.fontFamily
+    }
+  };
 }
 
 function renderTableNode(

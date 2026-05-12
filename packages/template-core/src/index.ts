@@ -93,6 +93,13 @@ export const cauCoursePaperTemplate: FormatTemplate = {
     spacingBeforePt: 6,
     spacingAfterPt: 0
   },
+  codeBlock: {
+    fontFamily: "Times New Roman",
+    fontSizePt: 10.5,
+    widthCm: 14.64,
+    spacingBeforePt: 6,
+    spacingAfterPt: 6
+  },
   tableCaption: {
     fontFamily: "宋体",
     fontSizePt: 10.5,
@@ -149,6 +156,16 @@ export function validateTemplate(template: unknown): FormatTemplateValidationRes
     errors.push("模板缺少表格字号。");
   }
   if (!item.image) errors.push("模板缺少图片样式。");
+  if (!item.codeBlock) errors.push("模板缺少代码块样式。");
+  if (item.codeBlock && (!item.codeBlock.fontFamily || typeof item.codeBlock.fontFamily !== "string")) {
+    errors.push("模板缺少代码块字体。");
+  }
+  if (item.codeBlock && typeof item.codeBlock.fontSizePt !== "number") {
+    errors.push("模板缺少代码块字号。");
+  }
+  if (item.codeBlock && typeof item.codeBlock.widthCm !== "number") {
+    errors.push("模板缺少代码块宽度。");
+  }
   if (!item.tableCaption) errors.push("模板缺少表题样式。");
   if (!item.figureCaption) errors.push("模板缺少图题样式。");
   if (!item.headingNumbering) errors.push("模板缺少标题自动编号设置。");
@@ -195,6 +212,10 @@ export function normalizeTemplate(template: Partial<FormatTemplate>): FormatTemp
     image: {
       ...structuredClone(cauCoursePaperTemplate.image),
       ...template.image
+    },
+    codeBlock: {
+      ...structuredClone(cauCoursePaperTemplate.codeBlock),
+      ...template.codeBlock
     },
     tableCaption: {
       ...structuredClone(cauCoursePaperTemplate.tableCaption),

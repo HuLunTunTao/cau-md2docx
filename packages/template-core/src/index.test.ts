@@ -44,6 +44,9 @@ describe("template core", () => {
     expect(imported.latinFontFamily).toBe("Times New Roman");
     expect(imported.table.fontFamily).toBe("宋体");
     expect(imported.table.fontSizePt).toBe(10.5);
+    expect(imported.codeBlock.fontFamily).toBe("Times New Roman");
+    expect(imported.codeBlock.fontSizePt).toBe(10.5);
+    expect(imported.codeBlock.widthCm).toBe(14.64);
     expect(imported.tableCaption.fontFamily).toBe("宋体");
     expect(imported.figureCaption.fontFamily).toBe("宋体");
     expect(imported.headingNumbering.enabled).toBe(true);

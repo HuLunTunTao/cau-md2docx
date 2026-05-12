@@ -154,6 +154,35 @@ export function TemplateEditor({ template, onChange }: Props) {
       <StyleFields label="二级标题" style={template.styles.heading2} readonly={readonly} onChange={(next) => patchStyle("heading2", next)} />
       <StyleFields label="三级标题" style={template.styles.heading3} readonly={readonly} onChange={(next) => patchStyle("heading3", next)} />
 
+      <h3>代码块</h3>
+      <fieldset className="style-fields">
+        <legend>代码块文本框</legend>
+        <div className="grid four">
+          <label className="field">
+            <span>代码字体</span>
+            <input
+              disabled={readonly}
+              value={template.codeBlock.fontFamily}
+              onChange={(event) =>
+                patch({ codeBlock: { ...template.codeBlock, fontFamily: event.target.value || "Times New Roman" } })
+              }
+            />
+          </label>
+          {numberField("代码字号 pt", template.codeBlock.fontSizePt, readonly, (value) =>
+            patch({ codeBlock: { ...template.codeBlock, fontSizePt: value } })
+          )}
+          {numberField("文本框宽 cm", template.codeBlock.widthCm, readonly, (value) =>
+            patch({ codeBlock: { ...template.codeBlock, widthCm: value } })
+          )}
+          {numberField("段前 pt", template.codeBlock.spacingBeforePt, readonly, (value) =>
+            patch({ codeBlock: { ...template.codeBlock, spacingBeforePt: value } })
+          )}
+          {numberField("段后 pt", template.codeBlock.spacingAfterPt, readonly, (value) =>
+            patch({ codeBlock: { ...template.codeBlock, spacingAfterPt: value } })
+          )}
+        </div>
+      </fieldset>
+
       <h3>表格与图片</h3>
       <fieldset className="style-fields">
         <legend>表格本体</legend>

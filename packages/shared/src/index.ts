@@ -53,6 +53,14 @@ export interface ImageStyle {
   spacingAfterPt: number;
 }
 
+export interface CodeBlockStyle {
+  fontFamily: string;
+  fontSizePt: number;
+  widthCm: number;
+  spacingBeforePt: number;
+  spacingAfterPt: number;
+}
+
 export type HeadingNumberFormat = "arabic" | "chinese";
 
 export interface HeadingNumberingStyle {
@@ -85,6 +93,7 @@ export interface FormatTemplate {
   };
   table: TableStyle;
   image: ImageStyle;
+  codeBlock: CodeBlockStyle;
   tableCaption: ParagraphStyle;
   figureCaption: ParagraphStyle;
   headingNumbering: HeadingNumberingStyle;
