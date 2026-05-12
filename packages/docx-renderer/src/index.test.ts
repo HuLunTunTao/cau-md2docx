@@ -236,7 +236,7 @@ describe("renderDocx", () => {
     expect(documentXml).toContain("表 自定义表题");
   });
 
-  it("renders code blocks as centered wide textboxes with left-aligned content", async () => {
+  it("renders code blocks as centered embedded tables with left-aligned content", async () => {
     const template = {
       ...cauCoursePaperTemplate,
       codeBlock: {
@@ -262,13 +262,13 @@ describe("renderDocx", () => {
     const zip = await JSZip.loadAsync(bytes);
     const documentXml = await zip.file("word/document.xml")!.async("string");
 
-    expect(documentXml).toContain("<w:pict>");
-    expect(documentXml).toContain("<v:textbox");
-    expect(documentXml).toContain("width:12.00cm");
-    expect(documentXml).toContain('mso-position-horizontal:center');
+    expect(documentXml).toContain("<w:tbl>");
+    expect(documentXml).not.toContain("<w:pict>");
+    expect(documentXml).not.toContain("<v:textbox");
+    expect(documentXml).toContain('w:tblW w:type="dxa" w:w="6803"');
+    expect(documentXml).toContain('w:jc w:val="center"');
     expect(documentXml).toContain('w:val="center"');
     expect(documentXml).toContain('w:val="left"');
-    expect(documentXml).toContain('w:before="160"');
     expect(documentXml).toContain('w:after="200"');
     expect(documentXml).toContain('w:sz w:val="18"');
     expect(documentXml).toContain('w:ascii="Consolas"');

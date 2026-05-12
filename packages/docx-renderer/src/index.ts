@@ -8,9 +8,7 @@ import {
   Table,
   TableCell,
   TableRow,
-  Textbox,
   TextRun,
-  type UniversalMeasure,
   WidthType
 } from "docx";
 import JSZip from "jszip";
@@ -77,7 +75,7 @@ function renderNode(
   template: FormatTemplate,
   assets: DocumentAsset[],
   context: RenderContext
-): Array<Paragraph | Table | Textbox> {
+): Array<Paragraph | Table> {
   switch (node.type) {
     case "heading":
       context.section = undefined;
@@ -94,7 +92,7 @@ function renderNode(
     case "blockquote":
       return [paragraph(node.text, { ...template.styles.body, firstLineIndentChars: 0 }, "BodyText", template)];
     case "code":
-      return [codeTextbox(node.value, template)];
+      return renderCodeBlock(node.value, template);
     case "list":
       return node.items.map((item, index) =>
         paragraph(`${node.ordered ? `${index + 1}.` : "•"} ${item}`, {
@@ -281,10 +279,23 @@ function labelledParagraph(
   });
 }
 
-function codeTextbox(text: string, template: FormatTemplate): Textbox {
+function renderCodeBlock(text: string, template: FormatTemplate): Array<Paragraph | Table> {
+  const blocks: Array<Paragraph | Table> = [];
+  if (template.codeBlock.spacingBeforePt > 0) {
+    blocks.push(spacerParagraph(template.codeBlock.spacingBeforePt));
+  }
+  blocks.push(codeBlockTable(text, template));
+  if (template.codeBlock.spacingAfterPt > 0) {
+    blocks.push(spacerParagraph(template.codeBlock.spacingAfterPt));
+  }
+  return blocks;
+}
+
+function codeBlockTable(text: string, template: FormatTemplate): Table {
   const contentWidthCm =
     PAGE_WIDTH_CM - template.page.marginLeftCm - template.page.marginRightCm;
   const widthCm = Math.min(template.codeBlock.widthCm, contentWidthCm);
+  const border = { style: BorderStyle.SINGLE, size: 4, color: "BFBFBF" };
   const codeStyle: ParagraphStyle = {
     ...template.styles.body,
     fontFamily: template.codeBlock.fontFamily,
@@ -295,30 +306,53 @@ function codeTextbox(text: string, template: FormatTemplate): Textbox {
     spacingBeforePt: 0,
     spacingAfterPt: 0
   };
-  const width: UniversalMeasure = `${widthCm.toFixed(2)}cm` as UniversalMeasure;
 
-  return new Textbox({
+  return new Table({
+    width: { size: cmToTwip(widthCm), type: WidthType.DXA },
     alignment: AlignmentType.CENTER,
+    borders: {
+      top: border,
+      bottom: border,
+      left: border,
+      right: border,
+      insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
+      insideVertical: { style: BorderStyle.NONE, size: 0, color: "FFFFFF" }
+    },
+    rows: [
+      new TableRow({
+        children: [
+          new TableCell({
+            margins: {
+              top: 100,
+              bottom: 100,
+              left: 140,
+              right: 140
+            },
+            children: codeLines(text).map(
+              (line) =>
+                new Paragraph({
+                  alignment: AlignmentType.LEFT,
+                  spacing: { before: 0, after: 0 },
+                  indent: { firstLine: 0 },
+                  children: [new TextRun(codeRunOptions(line || " ", codeStyle))]
+                })
+            )
+          })
+        ]
+      })
+    ]
+  });
+}
+
+function spacerParagraph(heightPt: number): Paragraph {
+  return new Paragraph({
     spacing: {
-      before: Math.round(template.codeBlock.spacingBeforePt * 20),
-      after: Math.round(template.codeBlock.spacingAfterPt * 20)
+      before: 0,
+      after: Math.round(heightPt * 20),
+      line: 1,
+      lineRule: "exact"
     },
-    style: {
-      width,
-      position: "relative",
-      positionHorizontal: "center",
-      positionHorizontalRelative: "text",
-      wrapStyle: "none"
-    },
-    children: codeLines(text).map(
-      (line) =>
-        new Paragraph({
-          alignment: AlignmentType.LEFT,
-          spacing: { before: 0, after: 0 },
-          indent: { firstLine: 0 },
-          children: [new TextRun(codeRunOptions(line || " ", codeStyle))]
-        })
-    )
+    children: [new TextRun({ text: "", size: 1 })]
   });
 }
 
