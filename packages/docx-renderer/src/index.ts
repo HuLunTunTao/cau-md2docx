@@ -39,7 +39,8 @@ export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
     figureCounter: 0,
     tableCounter: 0,
     figureChapterCounter: 0,
-    tableChapterCounter: 0
+    tableChapterCounter: 0,
+    section: undefined
   };
   const children = input.model.nodes.flatMap((node) =>
     renderNode(node, input.template, input.assets, context)
@@ -79,6 +80,7 @@ function renderNode(
 ): Array<Paragraph | Table | Textbox> {
   switch (node.type) {
     case "heading":
+      context.section = undefined;
       return [
         paragraph(
           headingText(node.depth, node.text, template, context),
@@ -88,7 +90,7 @@ function renderNode(
         )
       ];
     case "paragraph":
-      return [paragraph(node.text, template.styles.body, "BodyText", template)];
+      return renderParagraphNode(node.text, template, context);
     case "blockquote":
       return [paragraph(node.text, { ...template.styles.body, firstLineIndentChars: 0 }, "BodyText", template)];
     case "code":
@@ -113,6 +115,7 @@ interface RenderContext {
   tableCounter: number;
   figureChapterCounter: number;
   tableChapterCounter: number;
+  section?: "abstract-pending" | "abstract";
 }
 
 function headingText(
@@ -190,6 +193,91 @@ function paragraph(
         : 0
     },
     children: [new TextRun(runOptions(text, style, template))]
+  });
+}
+
+function renderParagraphNode(
+  text: string,
+  template: FormatTemplate,
+  context: RenderContext
+): Paragraph[] {
+  if (isAbstractTitle(text)) {
+    context.section = "abstract-pending";
+    return [];
+  }
+
+  const abstractText = abstractParagraphText(text);
+  if (abstractText !== undefined) {
+    context.section = "abstract";
+    return [labelledParagraph("摘要：", abstractText, template.abstractTitle, template.styles.abstract, "AbstractText", template)];
+  }
+
+  if (isKeywordParagraph(text)) {
+    context.section = undefined;
+    const keywordText = text.replace(/^关键词\s*[:：]\s*/, "");
+    return [
+      labelledParagraph("关键词：", keywordText, template.keywordTitle, template.keywords, "KeywordsText", template)
+    ];
+  }
+
+  if (context.section === "abstract-pending") {
+    context.section = "abstract";
+    return [labelledParagraph("摘要：", text, template.abstractTitle, template.styles.abstract, "AbstractText", template)];
+  }
+
+  if (context.section === "abstract") {
+    return [
+      paragraph(
+        text,
+        template.styles.abstract,
+        "AbstractText",
+        template
+      )
+    ];
+  }
+
+  return [paragraph(text, template.styles.body, "BodyText", template)];
+}
+
+function isAbstractTitle(text: string): boolean {
+  return text.trim() === "摘要";
+}
+
+function abstractParagraphText(text: string): string | undefined {
+  const match = text.trim().match(/^摘要\s*[:：]\s*(.*)$/);
+  return match ? match[1] : undefined;
+}
+
+function isKeywordParagraph(text: string): boolean {
+  return /^关键词\s*[:：]/.test(text.trim());
+}
+
+function labelledParagraph(
+  label: string,
+  text: string,
+  labelStyle: ParagraphStyle,
+  contentStyle: ParagraphStyle,
+  styleId: string,
+  template: FormatTemplate
+): Paragraph {
+  return new Paragraph({
+    style: styleId,
+    alignment: toDocxAlignment(contentStyle.alignment),
+    spacing: {
+      before: contentStyle.spacingBeforePt ? Math.round(contentStyle.spacingBeforePt * 20) : undefined,
+      after: contentStyle.spacingAfterPt ? Math.round(contentStyle.spacingAfterPt * 20) : 0,
+      line: contentStyle.lineSpacingPt ? Math.round(contentStyle.lineSpacingPt * 20) : undefined,
+      lineRule: contentStyle.lineSpacingPt ? ("exact" as const) : undefined
+    },
+    indent: {
+      firstLine: contentStyle.firstLineIndentChars
+        ? charsToTwip(contentStyle.firstLineIndentChars, contentStyle.fontSizePt)
+        : 0
+    },
+    children: [
+      new TextRun(runOptions(label, labelStyle, template)),
+      new TextRun(runOptions(text, contentStyle, template))
+    ]
   });
 }
 
@@ -476,6 +564,10 @@ function createStyles(template: FormatTemplate) {
       paragraphStyle("Heading2Style", "二级标题", template.styles.heading2, template),
       paragraphStyle("Heading3Style", "三级标题", template.styles.heading3, template),
       paragraphStyle("BodyText", "正文", template.styles.body, template),
+      paragraphStyle("AbstractTitle", "摘要标题", template.abstractTitle, template),
+      paragraphStyle("AbstractText", "摘要正文", template.styles.abstract, template),
+      paragraphStyle("KeywordTitle", "关键词标题", template.keywordTitle, template),
+      paragraphStyle("KeywordsText", "关键词", template.keywords, template),
       paragraphStyle("TableCaption", "表题", tableCaptionStyle(template), template),
       paragraphStyle("FigureCaption", "图题", figureCaptionStyle(template), template),
       paragraphStyle("ImageParagraph", template.image.paragraphStyleName, imageParagraphStyle(template), template)

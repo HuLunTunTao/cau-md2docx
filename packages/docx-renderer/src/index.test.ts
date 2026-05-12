@@ -123,6 +123,39 @@ describe("renderDocx", () => {
     expect(documentXml).toContain("二 第二个一级标题");
   });
 
+  it("renders abstract and keywords with dedicated styles", async () => {
+    const model: DocumentModel = {
+      nodes: [
+        { type: "heading", depth: 1, text: "论文标题" },
+        { type: "paragraph", text: "摘要" },
+        { type: "paragraph", text: "这里是摘要正文。" },
+        { type: "paragraph", text: "关键词：Markdown；DOCX" },
+        { type: "heading", depth: 2, text: "引言" },
+        { type: "paragraph", text: "这里是正文。" }
+      ]
+    };
+
+    const bytes = await renderDocx({ model, template: cauCoursePaperTemplate, assets: [] });
+    const zip = await JSZip.loadAsync(bytes);
+    const documentXml = await zip.file("word/document.xml")!.async("string");
+    const stylesXml = await zip.file("word/styles.xml")!.async("string");
+
+    expect(stylesXml).toContain('w:styleId="AbstractTitle"');
+    expect(stylesXml).toContain('w:styleId="AbstractText"');
+    expect(stylesXml).toContain('w:styleId="KeywordTitle"');
+    expect(stylesXml).toContain('w:styleId="KeywordsText"');
+    expect(extractParagraph(documentXml, "摘要：")).toContain('w:pStyle w:val="AbstractText"');
+    expect(extractParagraph(documentXml, "摘要：")).toContain("摘要：");
+    expect(extractParagraph(documentXml, "摘要：")).toContain("这里是摘要正文。");
+    expect(extractParagraph(documentXml, "摘要：")).toContain('w:firstLine="0"');
+    expect(extractParagraph(documentXml, "摘要：")).toContain("<w:b/>");
+    expect(extractParagraph(documentXml, "关键词：")).toContain('w:pStyle w:val="KeywordsText"');
+    expect(extractParagraph(documentXml, "关键词：")).toContain("Markdown；DOCX");
+    expect(extractParagraph(documentXml, "关键词：")).toContain("<w:b/>");
+    expect(extractParagraph(documentXml, "关键词：")).toContain('w:firstLine="0"');
+    expect(documentXml).toContain("1 引言");
+  });
+
   it("numbers figure and table captions by chapter when heading numbering is enabled", async () => {
     const model: DocumentModel = {
       nodes: [
@@ -276,5 +309,11 @@ function extractStyle(stylesXml: string, styleId: string): string {
   const match = stylesXml.match(
     new RegExp(`<w:style[^>]+w:styleId="${styleId}"[\\s\\S]*?<\\/w:style>`)
   );
+  return match?.[0] ?? "";
+}
+
+function extractParagraph(documentXml: string, text: string): string {
+  const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = documentXml.match(new RegExp(`<w:p[\\s\\S]*?${escaped}[\\s\\S]*?<\\/w:p>`));
   return match?.[0] ?? "";
 }

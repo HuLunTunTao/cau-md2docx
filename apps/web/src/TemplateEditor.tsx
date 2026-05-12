@@ -1,4 +1,4 @@
-import type { FormatTemplate, ParagraphStyle } from "@md2doc/shared";
+import type { Alignment, FormatTemplate, ParagraphStyle } from "@md2doc/shared";
 
 interface Props {
   template: FormatTemplate;
@@ -153,6 +153,32 @@ export function TemplateEditor({ template, onChange }: Props) {
       <StyleFields label="一级标题" style={template.styles.heading1} readonly={readonly} onChange={(next) => patchStyle("heading1", next)} />
       <StyleFields label="二级标题" style={template.styles.heading2} readonly={readonly} onChange={(next) => patchStyle("heading2", next)} />
       <StyleFields label="三级标题" style={template.styles.heading3} readonly={readonly} onChange={(next) => patchStyle("heading3", next)} />
+
+      <h3>摘要与关键词</h3>
+      <RichStyleFields
+        label="摘要标题"
+        style={template.abstractTitle}
+        readonly={readonly}
+        onChange={(next) => patch({ abstractTitle: { ...template.abstractTitle, ...next } })}
+      />
+      <RichStyleFields
+        label="摘要正文"
+        style={template.styles.abstract}
+        readonly={readonly}
+        onChange={(next) => patchStyle("abstract", next)}
+      />
+      <RichStyleFields
+        label="关键词标题"
+        style={template.keywordTitle}
+        readonly={readonly}
+        onChange={(next) => patch({ keywordTitle: { ...template.keywordTitle, ...next } })}
+      />
+      <RichStyleFields
+        label="关键词内容"
+        style={template.keywords}
+        readonly={readonly}
+        onChange={(next) => patch({ keywords: { ...template.keywords, ...next } })}
+      />
 
       <h3>代码块</h3>
       <fieldset className="style-fields">
@@ -328,6 +354,63 @@ function StyleFields({
         {numberField("字号 pt", style.fontSizePt, readonly, (value) => onChange({ fontSizePt: value }))}
         {numberField("行距 pt", style.lineSpacingPt ?? 0, readonly, (value) => onChange({ lineSpacingPt: value }))}
         {numberField("首行缩进字符", style.firstLineIndentChars ?? 0, readonly, (value) => onChange({ firstLineIndentChars: value }))}
+      </div>
+    </fieldset>
+  );
+}
+
+function RichStyleFields({
+  label,
+  style,
+  readonly,
+  onChange
+}: {
+  label: string;
+  style: ParagraphStyle;
+  readonly: boolean;
+  onChange: (style: Partial<ParagraphStyle>) => void;
+}) {
+  return (
+    <fieldset className="style-fields">
+      <legend>{label}</legend>
+      <div className="grid four">
+        <label className="field">
+          <span>字体</span>
+          <input
+            disabled={readonly}
+            value={style.fontFamily}
+            onChange={(event) => onChange({ fontFamily: event.target.value || "宋体" })}
+          />
+        </label>
+        {numberField("字号 pt", style.fontSizePt, readonly, (value) => onChange({ fontSizePt: value }))}
+        <label className="field">
+          <span>对齐</span>
+          <select
+            disabled={readonly}
+            value={style.alignment}
+            onChange={(event) => onChange({ alignment: event.target.value as Alignment })}
+          >
+            <option value="left">左对齐</option>
+            <option value="center">居中</option>
+            <option value="right">右对齐</option>
+            <option value="justify">两端对齐</option>
+          </select>
+        </label>
+        <label className="field checkbox-field">
+          <span>加粗</span>
+          <input
+            disabled={readonly}
+            type="checkbox"
+            checked={Boolean(style.bold)}
+            onChange={(event) => onChange({ bold: event.target.checked })}
+          />
+        </label>
+        {numberField("行距 pt", style.lineSpacingPt ?? 0, readonly, (value) => onChange({ lineSpacingPt: value }))}
+        {numberField("首行缩进字符", style.firstLineIndentChars ?? 0, readonly, (value) =>
+          onChange({ firstLineIndentChars: value })
+        )}
+        {numberField("段前 pt", style.spacingBeforePt ?? 0, readonly, (value) => onChange({ spacingBeforePt: value }))}
+        {numberField("段后 pt", style.spacingAfterPt ?? 0, readonly, (value) => onChange({ spacingAfterPt: value }))}
       </div>
     </fieldset>
   );

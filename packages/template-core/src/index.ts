@@ -100,6 +100,38 @@ export const cauCoursePaperTemplate: FormatTemplate = {
     spacingBeforePt: 6,
     spacingAfterPt: 6
   },
+  abstractTitle: {
+    fontFamily: "宋体",
+    fontSizePt: 12,
+    bold: true,
+    color: "000000",
+    alignment: "justify",
+    lineSpacingPt: 20,
+    firstLineIndentChars: 0,
+    spacingBeforePt: 0,
+    spacingAfterPt: 0
+  },
+  keywordTitle: {
+    fontFamily: "宋体",
+    fontSizePt: 12,
+    bold: true,
+    color: "000000",
+    alignment: "justify",
+    lineSpacingPt: 20,
+    firstLineIndentChars: 0,
+    spacingBeforePt: 0,
+    spacingAfterPt: 0
+  },
+  keywords: {
+    fontFamily: "宋体",
+    fontSizePt: 12,
+    color: "000000",
+    alignment: "justify",
+    lineSpacingPt: 20,
+    firstLineIndentChars: 0,
+    spacingBeforePt: 0,
+    spacingAfterPt: 0
+  },
   tableCaption: {
     fontFamily: "宋体",
     fontSizePt: 10.5,
@@ -166,6 +198,9 @@ export function validateTemplate(template: unknown): FormatTemplateValidationRes
   if (item.codeBlock && typeof item.codeBlock.widthCm !== "number") {
     errors.push("模板缺少代码块宽度。");
   }
+  if (!item.abstractTitle) errors.push("模板缺少摘要标题样式。");
+  if (!item.keywordTitle) errors.push("模板缺少关键词标题样式。");
+  if (!item.keywords) errors.push("模板缺少关键词样式。");
   if (!item.tableCaption) errors.push("模板缺少表题样式。");
   if (!item.figureCaption) errors.push("模板缺少图题样式。");
   if (!item.headingNumbering) errors.push("模板缺少标题自动编号设置。");
@@ -216,6 +251,18 @@ export function normalizeTemplate(template: Partial<FormatTemplate>): FormatTemp
     codeBlock: {
       ...structuredClone(cauCoursePaperTemplate.codeBlock),
       ...template.codeBlock
+    },
+    abstractTitle: {
+      ...structuredClone(cauCoursePaperTemplate.abstractTitle),
+      ...template.abstractTitle
+    },
+    keywordTitle: {
+      ...structuredClone(cauCoursePaperTemplate.keywordTitle),
+      ...template.keywordTitle
+    },
+    keywords: {
+      ...structuredClone(cauCoursePaperTemplate.keywords),
+      ...template.keywords
     },
     tableCaption: {
       ...structuredClone(cauCoursePaperTemplate.tableCaption),

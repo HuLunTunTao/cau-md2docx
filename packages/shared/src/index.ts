@@ -94,6 +94,9 @@ export interface FormatTemplate {
   table: TableStyle;
   image: ImageStyle;
   codeBlock: CodeBlockStyle;
+  abstractTitle: ParagraphStyle;
+  keywordTitle: ParagraphStyle;
+  keywords: ParagraphStyle;
   tableCaption: ParagraphStyle;
   figureCaption: ParagraphStyle;
   headingNumbering: HeadingNumberingStyle;
