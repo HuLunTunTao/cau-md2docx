@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360">
+  <rect width="960" height="360" fill="#f7f2ea"/>
+  <g font-family="Arial, sans-serif" font-size="30" text-anchor="middle">
+    <rect x="60" y="130" width="180" height="90" rx="8" fill="#dfe9e4" stroke="#3f6653" stroke-width="4"/>
+    <text x="150" y="184" fill="#233b31">上传 ZIP</text>
+    <rect x="300" y="130" width="180" height="90" rx="8" fill="#fff5d7" stroke="#8a6b21" stroke-width="4"/>
+    <text x="390" y="184" fill="#4c3d16">解析 MD</text>
+    <rect x="540" y="130" width="180" height="90" rx="8" fill="#e7edf8" stroke="#3b5f8f" stroke-width="4"/>
+    <text x="630" y="184" fill="#243b59">应用模板</text>
+    <rect x="780" y="130" width="140" height="90" rx="8" fill="#f4e2dc" stroke="#8a4b2b" stroke-width="4"/>
+    <text x="850" y="184" fill="#5b2f1d">导出</text>
+  </g>
+  <path d="M245 175h45M485 175h45M725 175h45" stroke="#555" stroke-width="5" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0l10 5-10 5z" fill="#555"/></marker></defs>
+</svg>

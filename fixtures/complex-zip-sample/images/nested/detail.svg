@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
+  <rect width="520" height="520" fill="#f7f2ea"/>
+  <circle cx="260" cy="260" r="180" fill="#fffdf9" stroke="#8a4b2b" stroke-width="6"/>
+  <path d="M160 285c60-95 140-95 200 0" fill="none" stroke="#3b5f8f" stroke-width="12"/>
+  <path d="M145 300h230" stroke="#3f6653" stroke-width="10"/>
+  <text x="260" y="430" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="#333">嵌套目录图片</text>
+</svg>

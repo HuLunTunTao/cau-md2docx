@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="520" viewBox="0 0 720 520">
+  <rect width="720" height="520" fill="#ffffff"/>
+  <rect x="150" y="40" width="420" height="440" fill="#fffdf9" stroke="#222" stroke-width="3"/>
+  <rect x="195" y="90" width="330" height="28" fill="#d7c6b4"/>
+  <rect x="195" y="145" width="330" height="12" fill="#b9c8d8"/>
+  <rect x="195" y="170" width="330" height="12" fill="#b9c8d8"/>
+  <rect x="195" y="210" width="330" height="120" fill="#e7edf8" stroke="#3b5f8f" stroke-width="3"/>
+  <rect x="195" y="365" width="330" height="50" fill="#dfe9e4"/>
+  <g font-family="Arial, sans-serif" font-size="22" fill="#333">
+    <text x="210" y="280">图片区域</text>
+    <text x="585" y="78">A4 页面</text>
+    <text x="40" y="270">正文宽度限宽</text>
+  </g>
+</svg>

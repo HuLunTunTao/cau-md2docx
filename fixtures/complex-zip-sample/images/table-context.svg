@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="260" viewBox="0 0 760 260">
+  <rect width="760" height="260" fill="#fbfaf6"/>
+  <line x1="90" y1="70" x2="670" y2="70" stroke="#111" stroke-width="5"/>
+  <line x1="90" y1="122" x2="670" y2="122" stroke="#111" stroke-width="4"/>
+  <line x1="90" y1="205" x2="670" y2="205" stroke="#111" stroke-width="3"/>
+  <g font-family="Arial, sans-serif" font-size="28" fill="#333">
+    <text x="115" y="106">处理组</text>
+    <text x="300" y="106">样本数</text>
+    <text x="485" y="106">平均值</text>
+    <text x="115" y="165">A 组</text>
+    <text x="315" y="165">12</text>
+    <text x="500" y="165">18.4</text>
+  </g>
+</svg>

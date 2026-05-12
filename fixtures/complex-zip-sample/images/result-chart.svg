@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+  <rect width="900" height="420" fill="#fffdf9"/>
+  <line x1="90" y1="340" x2="820" y2="340" stroke="#333" stroke-width="3"/>
+  <line x1="90" y1="60" x2="90" y2="340" stroke="#333" stroke-width="3"/>
+  <polyline points="110,300 230,260 350,210 470,220 590,145 710,120 810,92" fill="none" stroke="#8a4b2b" stroke-width="6"/>
+  <polyline points="110,315 230,300 350,285 470,250 590,240 710,205 810,180" fill="none" stroke="#3b5f8f" stroke-width="6"/>
+  <g font-family="Arial, sans-serif" font-size="24" fill="#333">
+    <text x="360" y="390">时间</text>
+    <text x="20" y="55">指标</text>
+    <text x="650" y="80" fill="#8a4b2b">处理组</text>
+    <text x="650" y="115" fill="#3b5f8f">对照组</text>
+  </g>
+</svg>

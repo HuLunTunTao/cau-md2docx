@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": true,
+    "jsx": "react-jsx"
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/markdown-core" },
+    { "path": "../../packages/template-core" },
+    { "path": "../../packages/docx-renderer" }
+  ]
+}
