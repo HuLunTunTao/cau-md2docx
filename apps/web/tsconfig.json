@@ -8,6 +8,7 @@
   "include": ["src"],
   "references": [
     { "path": "../../packages/shared" },
+    { "path": "../../packages/document-package" },
     { "path": "../../packages/markdown-core" },
     { "path": "../../packages/template-core" },
     { "path": "../../packages/docx-renderer" }

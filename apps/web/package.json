@@ -10,6 +10,7 @@
     "test": "vitest run src --passWithNoTests"
   },
   "dependencies": {
+    "@md2doc/document-package": "workspace:*",
     "@md2doc/docx-renderer": "workspace:*",
     "@md2doc/markdown-core": "workspace:*",
     "@md2doc/shared": "workspace:*",
