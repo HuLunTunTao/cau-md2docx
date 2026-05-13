@@ -17,6 +17,50 @@ import {
 } from "./browser";
 
 const builtInTemplates = getBuiltInTemplates();
+const flowDiagramSvg = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="980" height="210" viewBox="0 0 980 210" role="img" aria-labelledby="title desc">
+  <title id="title">论文格式整理流程</title>
+  <desc id="desc">人工撰写报告初稿，整理 Markdown 和图片目录，压缩为 zip，上传网站处理，下载 Word 文档。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7a3f22"/>
+    </marker>
+  </defs>
+  <rect width="980" height="210" fill="#fffdf9"/>
+  <g font-family="PingFang SC, Microsoft YaHei, sans-serif" text-anchor="middle">
+    <g transform="translate(90 58)">
+      <rect width="150" height="94" rx="8" fill="#faf6ef" stroke="#cfc7bb"/>
+      <text x="75" y="38" font-size="18" font-weight="700" fill="#2f2b26">报告初稿</text>
+      <text x="75" y="66" font-size="13" fill="#6f6a61">人工撰写正文</text>
+    </g>
+    <g transform="translate(290 58)">
+      <rect width="150" height="94" rx="8" fill="#faf6ef" stroke="#cfc7bb"/>
+      <text x="75" y="34" font-size="18" font-weight="700" fill="#2f2b26">整理材料</text>
+      <text x="75" y="60" font-size="13" fill="#6f6a61">Markdown 文档</text>
+      <text x="75" y="78" font-size="13" fill="#6f6a61">images 图片目录</text>
+    </g>
+    <g transform="translate(490 58)">
+      <rect width="150" height="94" rx="8" fill="#faf6ef" stroke="#cfc7bb"/>
+      <text x="75" y="38" font-size="18" font-weight="700" fill="#2f2b26">压缩 zip</text>
+      <text x="75" y="66" font-size="13" fill="#6f6a61">保持相对路径</text>
+    </g>
+    <g transform="translate(690 58)">
+      <rect width="150" height="94" rx="8" fill="#faf6ef" stroke="#cfc7bb"/>
+      <text x="75" y="38" font-size="18" font-weight="700" fill="#2f2b26">上传处理</text>
+      <text x="75" y="66" font-size="13" fill="#6f6a61">选择格式模板</text>
+    </g>
+    <g transform="translate(850 58)">
+      <rect width="110" height="94" rx="8" fill="#3f6653" stroke="#3f6653"/>
+      <text x="55" y="38" font-size="18" font-weight="700" fill="#ffffff">下载 Word</text>
+      <text x="55" y="66" font-size="13" fill="#edf7f1">.docx 文件</text>
+    </g>
+  </g>
+  <g stroke="#7a3f22" stroke-width="2" marker-end="url(#arrow)">
+    <line x1="240" y1="105" x2="280" y2="105"/>
+    <line x1="440" y1="105" x2="480" y2="105"/>
+    <line x1="640" y1="105" x2="680" y2="105"/>
+    <line x1="840" y1="105" x2="850" y2="105"/>
+  </g>
+</svg>`)}`;
 const markdownPrompt = `请整理一份可被“论文格式自动整理”网站稳定处理的 Markdown 文档，并按以下规则组织内容：
 
 1. 输出一个完整的 Markdown 文档，不要输出解释性文字。
@@ -221,10 +265,35 @@ export function App() {
 
       <section className="panel prompt-panel">
         <div className="section-head">
-          <h2>Markdown 整理提示词</h2>
+          <h2>Markdown 整理辅助提示词</h2>
           <button type="button" onClick={() => void handleCopyPrompt()}>复制提示词</button>
         </div>
+        <p className="hint">如果已经有人工撰写的报告初稿，可以用这段提示词辅助统一 Markdown 结构和图片引用；也可以直接按下方流程手动整理。</p>
         <textarea readOnly value={markdownPrompt} />
+      </section>
+
+      <section className="panel guide-panel">
+        <h2>使用流程</h2>
+        <p className="hint">从人工撰写的报告初稿出发，先整理正文和图片材料，再交给工具统一生成 Word 格式文档。</p>
+        <img className="flow-diagram" src={flowDiagramSvg} alt="论文格式整理流程：报告初稿、整理材料、压缩 zip、上传处理、下载 Word" />
+        <div className="guide-grid">
+          <div>
+            <h3>网页处理</h3>
+            <ol>
+              <li>将报告正文整理为一个 Markdown 文档。</li>
+              <li>将图片放入 images 目录，并在 Markdown 中使用相对路径引用。</li>
+              <li>把 Markdown 文档和 images 目录一起压缩为 zip。</li>
+              <li>上传 zip，选择模板，生成并下载 .docx 文件。</li>
+            </ol>
+          </div>
+          <div>
+            <h3>下载版本</h3>
+            <p>GitHub Release 会提供命令行脚本和单 HTML 离线网页版。命令行版本适合批量转换；离线版可直接在浏览器中打开使用。</p>
+            <a className="download-link secondary-link" href="https://github.com/huluntuntao/cau-md2docx/releases" target="_blank" rel="noreferrer">
+              查看 GitHub Release
+            </a>
+          </div>
+        </div>
       </section>
 
       <section className="panel">

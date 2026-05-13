@@ -130,6 +130,41 @@ textarea {
   font-size: 13px;
 }
 
+.guide-panel h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+.flow-diagram {
+  display: block;
+  width: 100%;
+  margin: 16px 0;
+  border: 1px solid #ddd6cb;
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 18px;
+}
+
+.guide-grid ol {
+  margin: 0;
+  padding-left: 22px;
+  color: #3c4043;
+}
+
+.guide-grid li + li {
+  margin-top: 6px;
+}
+
+.guide-grid p {
+  margin: 0 0 14px;
+  color: #5f6368;
+}
+
 input:disabled {
   color: #777;
   background: #f2eee7;
@@ -155,6 +190,11 @@ button,
   padding: 9px 12px;
   font-weight: 700;
   text-decoration: none;
+}
+
+.secondary-link {
+  background: #fff;
+  color: #3f6653;
 }
 
 button:disabled {
@@ -220,7 +260,8 @@ button:disabled {
   }
 
   .section-head,
-  .convert {
+  .convert,
+  .guide-grid {
     display: grid;
   }
 }
