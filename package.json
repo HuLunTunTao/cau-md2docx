@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @md2doc/web dev",
     "build": "pnpm -r build",
+    "build:offline": "pnpm --filter @md2doc/web build:offline",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   },

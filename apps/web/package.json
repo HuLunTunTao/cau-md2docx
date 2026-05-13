@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:offline": "tsc -b && vite build --config vite.offline.config.ts",
     "typecheck": "tsc -b",
     "test": "vitest run src --passWithNoTests"
   },

@@ -6,6 +6,7 @@ node_modules/
 # Build output
 dist/
 **/dist/
+**/dist-offline/
 *.tsbuildinfo
 
 # Test and coverage output
