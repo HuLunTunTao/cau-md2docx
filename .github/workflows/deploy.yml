@@ -3,10 +3,11 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -44,12 +45,34 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Build offline web
+        run: pnpm build:offline
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p release-artifacts
+          cp packages/cli/dist/md2doc-cli.mjs release-artifacts/md2doc-cli.mjs
+          cp apps/web/dist-offline/md2doc-offline.html release-artifacts/md2doc-offline.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: apps/web/dist
 
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: md2doc-release-artifacts
+          path: release-artifacts/*
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/*
+
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
