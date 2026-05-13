@@ -79,6 +79,21 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
 
+  packages/cli:
+    dependencies:
+      '@md2doc/document-package':
+        specifier: workspace:*
+        version: link:../document-package
+      '@md2doc/docx-renderer':
+        specifier: workspace:*
+        version: link:../docx-renderer
+      '@md2doc/markdown-core':
+        specifier: workspace:*
+        version: link:../markdown-core
+      '@md2doc/template-core':
+        specifier: workspace:*
+        version: link:../template-core
+
   packages/document-package:
     dependencies:
       '@md2doc/shared':

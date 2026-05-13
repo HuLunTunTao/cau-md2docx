@@ -1,0 +1,21 @@
+{
+  "name": "@md2doc/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "md2doc": "./dist/md2doc-cli.mjs"
+  },
+  "scripts": {
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run src --passWithNoTests"
+  },
+  "dependencies": {
+    "@md2doc/document-package": "workspace:*",
+    "@md2doc/docx-renderer": "workspace:*",
+    "@md2doc/markdown-core": "workspace:*",
+    "@md2doc/template-core": "workspace:*"
+  },
+  "devDependencies": {}
+}
