@@ -1,23 +1,40 @@
 # CAU Markdown 论文格式整理工具
 
-一个纯前端的 Markdown 到 DOCX 整理工具，面向中国农业大学课程论文等校内论文格式场景。当前版本提供 React 网页应用，所有解析、图片读取和 Word 生成都在浏览器本地完成，不依赖服务端。
+一个 Markdown 到 DOCX 整理工具，面向中国农业大学课程论文等校内论文格式场景。当前版本提供网页应用、命令行脚本和单 HTML 离线网页版；网页中的解析、图片读取和 Word 生成都在浏览器本地完成，不依赖服务端。
 
 ## 功能概览
 
 - 将包含 Markdown 文档和 `images/` 目录的 zip 包整理为 `.docx`。
 - 内置 `CAU 课程论文` 模板。
 - 支持用户复制、编辑、导入和导出模板 JSON。
+- 支持命令行转换，并可加载网页导出的模板 JSON。
+- 支持单 HTML 离线网页版。
 - 支持标题自动编号、图题自动编号、表题自动编号。
 - 支持 GFM 表格，并按三线表规则渲染。
 - 支持 Markdown 图片相对路径，并按 zip 内资源匹配图片。
 - 支持摘要、关键词、正文、标题、表格、图片、题注和代码块等常见论文排版项。
 - 导出的 Word 中图片段落样式名称为 `图片`。
 
-当前不包含 CLI、实时预览、PDF 导出和服务端转换，但代码结构已经按未来 CLI 复用核心逻辑拆分。
+当前不包含实时预览、PDF 导出和服务端转换。
+
+## 使用流程
+
+推荐从人工撰写的报告初稿出发，将正文和图片材料整理成稳定的 Markdown 文档包，再用网页或命令行生成 Word 文件。
+
+```mermaid
+flowchart LR
+  A[人工撰写的报告初稿] --> B[整理为 Markdown 文档和 images 图片目录]
+  B --> C[压缩为 zip 文件]
+  C --> D[上传网站或使用 CLI 处理]
+  D --> E[选择或指定格式模板]
+  E --> F[下载或生成 Word .docx]
+```
+
+如果需要 AI/Agent 辅助整理材料，可以把网页中的“Markdown 整理辅助提示词”和报告初稿一起提供给工具，让其输出符合约定的 Markdown 文档，并把图片文件放入 `images/` 目录。
 
 ## 输入格式
 
-上传文件必须是 zip 包，推荐结构如下：
+网页和命令行都使用同一种输入格式：一个 zip 包，推荐结构如下：
 
 ```text
 report.zip
@@ -156,12 +173,54 @@ export interface DocumentAsset {
 
 用户模板保存在浏览器本地存储，并支持 JSON 导入导出。
 
+## 命令行使用
+
+GitHub Release 会提供可直接下载的 `md2doc-cli.mjs`。命令行默认使用内置 `CAU 课程论文` 模板，也可以通过 `--template` 指定网页导出的模板 JSON。
+
+```bash
+node md2doc-cli.mjs report.zip -o report.docx
+```
+
+使用自定义模板：
+
+```bash
+node md2doc-cli.mjs report.zip -o report.docx --template template.json
+```
+
+也可以使用 Bun 直接运行：
+
+```bash
+bun md2doc-cli.mjs report.zip -o report.docx
+```
+
+如果后续将脚本发布为 npm 包，可使用 npm 或 pnpm 的包执行命令运行；npm/pnpm 是包执行器，实际执行环境仍是 Node.js：
+
+```bash
+npm exec md2doc -- report.zip -o report.docx
+pnpm dlx md2doc report.zip -o report.docx
+```
+
+本地验证过的工具版本：
+
+- Node.js `v24.11.1`
+- npm `11.6.2`
+- pnpm `10.22.0`
+- Bun `1.3.12`
+
+## 离线网页版
+
+GitHub Release 会提供 `md2doc-offline.html`。下载后可直接用浏览器打开，功能与在线网页保持一致，包括 zip 上传、模板编辑、模板导入导出和 Word 生成。
+
+离线版仍然只在本地浏览器中处理文件，不需要服务端，也不会上传报告内容。
+
 ## 项目结构
 
 ```text
 apps/
   web/              React 中文界面
 packages/
+  cli/              命令行转换入口
+  document-package/ zip 文档包读取
   markdown-core/    Markdown -> DocumentModel
   template-core/    模板 schema、内置模板、校验、导入导出
   docx-renderer/    DocumentModel + FormatTemplate -> DOCX Uint8Array
@@ -173,9 +232,10 @@ fixtures/
 依赖边界：
 
 - `apps/web` 负责文件上传、zip 读取、状态展示和下载。
+- `packages/cli` 负责命令行参数、文件读写和调用核心转换流程。
+- `packages/document-package` 负责读取 zip 内的 Markdown 和图片资源。
 - `packages/*` 不依赖 React。
 - `docx-renderer` 不访问 DOM，输出 `Uint8Array`。
-- 未来 CLI 可以复用 `packages/*`。
 
 ## 本地开发
 
@@ -208,6 +268,12 @@ http://localhost:5173/
 pnpm build
 ```
 
+构建单 HTML 离线版：
+
+```bash
+pnpm build:offline
+```
+
 测试：
 
 ```bash
@@ -228,6 +294,18 @@ Web 应用是静态站点，生产构建输出位于：
 apps/web/dist
 ```
 
+离线版构建输出位于：
+
+```text
+apps/web/dist-offline/md2doc-offline.html
+```
+
+CLI 构建输出位于：
+
+```text
+packages/cli/dist/md2doc-cli.mjs
+```
+
 本仓库已配置 GitHub Pages workflow，推送到 `main` 后会自动构建并发布到：
 
 ```text
@@ -236,9 +314,13 @@ https://huluntuntao.github.io/cau-md2docx/
 
 部署到其他子路径时，需要同步调整 [apps/web/vite.config.ts](apps/web/vite.config.ts) 中的 `base`。
 
+推送 `v*` 标签时，workflow 会构建并发布 GitHub Release 附件：
+
+- `md2doc-cli.mjs`
+- `md2doc-offline.html`
+
 ## 当前限制
 
-- 暂不提供 CLI。
 - 暂不提供实时预览。
 - 暂不提供 PDF 导出。
 - 暂不处理参考文献专用格式。
