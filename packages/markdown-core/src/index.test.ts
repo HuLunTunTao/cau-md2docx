@@ -70,4 +70,21 @@ const a = 1;
       { type: "paragraph", text: "正文。" }
     ]);
   });
+
+  it("keeps images when the caption is separated by a soft line break", () => {
+    const model = parseMarkdown(`![相关性热力图](images/correlation_heatmap.png)
+图 污染物与 AQI 相关性热力图
+
+正文。
+`);
+
+    expect(model.nodes).toMatchObject([
+      {
+        type: "image",
+        url: "images/correlation_heatmap.png",
+        caption: "图 污染物与 AQI 相关性热力图"
+      },
+      { type: "paragraph", text: "正文。" }
+    ]);
+  });
 });

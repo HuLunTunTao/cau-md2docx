@@ -20,14 +20,18 @@ export function parseMarkdown(markdown: string): DocumentModel {
   const nodes: DocumentNode[] = [];
 
   for (const child of tree.children ?? []) {
-    const node = convertNode(child);
-    if (node) nodes.push(node);
+    const converted = convertNode(child);
+    if (Array.isArray(converted)) {
+      nodes.push(...converted);
+    } else if (converted) {
+      nodes.push(converted);
+    }
   }
 
   return { nodes: attachCaptions(nodes) };
 }
 
-function convertNode(node: MdNode): DocumentNode | null {
+function convertNode(node: MdNode): DocumentNode | DocumentNode[] | null {
   switch (node.type) {
     case "heading":
       return {
@@ -36,14 +40,8 @@ function convertNode(node: MdNode): DocumentNode | null {
         text: toString(node).trim()
       };
     case "paragraph": {
-      const image = node.children?.find((child) => child.type === "image");
-      if (image?.type === "image" && node.children?.length === 1) {
-        return {
-          type: "image",
-          alt: image.alt ?? "",
-          url: image.url ?? ""
-        };
-      }
+      const imageParagraph = convertImageParagraph(node);
+      if (imageParagraph) return imageParagraph;
       return textNode("paragraph", toString(node));
     }
     case "blockquote":
@@ -67,6 +65,31 @@ function convertNode(node: MdNode): DocumentNode | null {
     default:
       return textNode("paragraph", toString(node));
   }
+}
+
+function convertImageParagraph(node: MdNode): DocumentNode | DocumentNode[] | null {
+  const children = node.children ?? [];
+  const imageIndex = children.findIndex((child) => child.type === "image");
+  if (imageIndex < 0) return null;
+
+  const image = children[imageIndex];
+  const beforeText = children.slice(0, imageIndex).map((child) => toString(child)).join("").trim();
+  const afterText = children.slice(imageIndex + 1).map((child) => toString(child)).join("").trim();
+
+  if (beforeText) return null;
+
+  const imageNode: DocumentNode = {
+    type: "image",
+    alt: image.alt ?? "",
+    url: image.url ?? ""
+  };
+
+  if (!afterText) return imageNode;
+  if (isFigureCaption(afterText)) {
+    return { ...imageNode, caption: afterText };
+  }
+
+  return [imageNode, { type: "paragraph", text: afterText }];
 }
 
 function textNode(type: "paragraph" | "blockquote", value: string): DocumentNode | null {
