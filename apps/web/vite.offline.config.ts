@@ -5,7 +5,8 @@ export default defineConfig({
   base: "./",
   plugins: [react(), singleHtmlPlugin()],
   build: {
-    outDir: "dist-offline",
+    outDir: "../../dist-offline",
+    emptyOutDir: true,
     assetsInlineLimit: Number.MAX_SAFE_INTEGER,
     cssCodeSplit: false,
     rollupOptions: {
@@ -29,16 +30,17 @@ function singleHtmlPlugin(): Plugin {
       let html = htmlAsset.source;
       for (const item of Object.values(bundle)) {
         if (item.type === "chunk" && item.fileName.endsWith(".js")) {
+          const code = escapeInlineScript(item.code);
           html = html.replace(
             new RegExp(`<script type="module" crossorigin src="./${escapeRegExp(item.fileName)}"></script>`),
-            `<script type="module">\n${item.code}\n</script>`
+            () => `<script type="module">\n${code}\n</script>`
           );
           delete bundle[item.fileName];
         }
         if (item.type === "asset" && item.fileName.endsWith(".css") && typeof item.source === "string") {
           html = html.replace(
             new RegExp(`<link rel="stylesheet" crossorigin href="./${escapeRegExp(item.fileName)}">`),
-            `<style>\n${item.source}\n</style>`
+            () => `<style>\n${item.source}\n</style>`
           );
           delete bundle[item.fileName];
         }
@@ -52,4 +54,8 @@ function singleHtmlPlugin(): Plugin {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function escapeInlineScript(value: string): string {
+  return value.replace(/<\/script/gi, "<\\/script").replaceAll("<!--", "<\\!--");
 }

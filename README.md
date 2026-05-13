@@ -297,7 +297,7 @@ apps/web/dist
 离线版构建输出位于：
 
 ```text
-apps/web/dist-offline/md2doc-offline.html
+dist-offline/md2doc-offline.html
 ```
 
 CLI 构建输出位于：

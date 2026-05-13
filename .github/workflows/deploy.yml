@@ -52,7 +52,7 @@ jobs:
         run: |
           mkdir -p release-artifacts
           cp packages/cli/dist/md2doc-cli.mjs release-artifacts/md2doc-cli.mjs
-          cp apps/web/dist-offline/md2doc-offline.html release-artifacts/md2doc-offline.html
+          cp dist-offline/md2doc-offline.html release-artifacts/md2doc-offline.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
