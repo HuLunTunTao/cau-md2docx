@@ -53,6 +53,9 @@ jobs:
           mkdir -p release-artifacts
           cp packages/cli/dist/md2doc-cli.mjs release-artifacts/md2doc-cli.mjs
           cp dist-offline/md2doc-offline.html release-artifacts/md2doc-offline.html
+          mkdir -p apps/web/dist/downloads
+          cp release-artifacts/md2doc-cli.mjs apps/web/dist/downloads/md2doc-cli.mjs
+          cp release-artifacts/md2doc-offline.html apps/web/dist/downloads/md2doc-offline.html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

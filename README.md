@@ -192,7 +192,13 @@ export interface DocumentAsset {
 
 ## 命令行使用
 
-GitHub Release 会提供可直接下载的 `md2doc-cli.mjs`。命令行默认使用内置 `CAU 课程论文` 模板，也可以通过 `--template` 指定网页导出的模板 JSON。
+GitHub Release 会提供可直接下载的 `md2doc-cli.mjs`。如果只需要 main 分支的最新版本，也可以使用 GitHub Pages 上的固定地址：
+
+```text
+https://huluntuntao.github.io/cau-md2docx/downloads/md2doc-cli.mjs
+```
+
+命令行默认使用内置 `CAU 课程论文` 模板，也可以通过 `--template` 指定网页导出的模板 JSON。
 
 ```bash
 node md2doc-cli.mjs report.zip -o report.docx
@@ -229,6 +235,12 @@ pnpm dlx md2doc report.zip -o report.docx
 GitHub Release 会提供 `md2doc-offline.html`。下载后可直接用浏览器打开，功能与在线网页保持一致，包括 zip 上传、模板编辑、模板导入导出和 Word 生成。
 
 离线版仍然只在本地浏览器中处理文件，不需要服务端，也不会上传报告内容。
+
+main 分支最新离线版也会同步发布到 GitHub Pages：
+
+```text
+https://huluntuntao.github.io/cau-md2docx/downloads/md2doc-offline.html
+```
 
 ## 项目结构
 
@@ -335,3 +347,5 @@ https://huluntuntao.github.io/cau-md2docx/
 
 - `md2doc-cli.mjs`
 - `md2doc-offline.html`
+
+同时，推送到 `main` 会把最新 CLI 和离线版复制到 GitHub Pages 的 `downloads/` 目录，形成固定 latest 下载地址。
