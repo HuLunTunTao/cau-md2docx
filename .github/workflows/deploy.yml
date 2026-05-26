@@ -45,6 +45,20 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Verify standalone CLI
+        run: |
+          if grep -Eq '^import .* from "(docx|jszip|unified|remark-|mdast-util-to-string)' packages/cli/dist/md2doc-cli.mjs; then
+            echo "CLI artifact contains external package imports."
+            exit 1
+          fi
+          mkdir -p /tmp/md2doc-cli-check
+          cp packages/cli/dist/md2doc-cli.mjs /tmp/md2doc-cli-check/md2doc-cli.mjs
+          cp fixtures/complex-zip-sample/complex-zip-sample.zip /tmp/md2doc-cli-check/sample.zip
+          cd /tmp/md2doc-cli-check
+          node md2doc-cli.mjs --help
+          node md2doc-cli.mjs sample.zip -o sample.docx
+          test -f sample.docx
+
       - name: Build offline web
         run: pnpm build:offline
 
