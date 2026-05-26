@@ -2,6 +2,30 @@
 
 一个 Markdown 到 DOCX 整理工具，面向中国农业大学课程论文等校内论文格式场景。当前版本提供网页应用、命令行脚本和单 HTML 离线网页版；网页中的解析、图片读取和 Word 生成都在浏览器本地完成，不依赖服务端。
 
+## 交给 Agent 的命令行处理提示词
+
+将人工撰写的报告初稿和原始图片材料提供给能够读写文件、执行命令的 Agent 后，可直接使用下面的提示词让其整理并生成 Word 文档：
+
+```text
+请将我提供的报告初稿与图片材料整理为 Word 文档。以原稿内容、数据和结论为准，不要擅自扩写实验结果或改变观点。
+
+请按以下步骤完成：
+1. 整理一个完整的 Markdown 文档，并建立 images/ 目录保存报告使用的图片。
+2. 所有图片使用相对路径，例如：![流程图](images/flow.png)；图片必须单独成段，图题单独放在图片正下方一行，写成“图 图题文字”。
+3. 一级 Markdown 标题 # 用作论文标题；##、###、#### 分别作为正文中的一级、二级、三级标题。不要手写标题编号，转换工具会自动编号。
+4. 摘要写成“摘要：摘要正文”，或将“摘要”单独写一行、下一段写摘要正文；不要把摘要写成 Markdown 标题。
+5. 关键词单独写一段，格式为“关键词：词一；词二；词三”。
+6. 表格使用 GFM Markdown 表格语法；表题单独放在表格正上方，写成“表 表题文字”，不要在表格内写表题。
+7. 正文保持自然、正式的论文表达，避免 HTML；代码使用 fenced code block。
+8. 将 Markdown 文档和 images/ 目录压缩为一个 zip 文件，zip 中只能有一个 .md 或 .markdown 文档。
+9. 从以下固定地址下载最新独立命令行脚本，该脚本不需要 npm install 或额外安装依赖：
+   https://huluntuntao.github.io/cau-md2docx/downloads/md2doc-cli.mjs
+10. 优先使用 Node.js 执行转换命令；如果环境只有 Bun，也可以使用 Bun：
+    node md2doc-cli.mjs input.zip -o output.docx
+    bun md2doc-cli.mjs input.zip -o output.docx
+11. 完成后提供生成的 .docx 文件，并说明 Markdown 文件、图片目录、zip 文件和 Word 文件的位置；如果图片缺失或材料存在无法确认的内容，请明确列出，不要自行补造。
+```
+
 ## 功能概览
 
 - 将包含 Markdown 文档和 `images/` 目录的 zip 包整理为 `.docx`。
@@ -47,7 +71,7 @@ flowchart LR
   E --> F[下载或生成 Word .docx]
 ```
 
-如果需要 AI/Agent 辅助整理材料，可以把网页中的“Markdown 整理辅助提示词”和报告初稿一起提供给工具，让其输出符合约定的 Markdown 文档，并把图片文件放入 `images/` 目录。
+如果需要 AI/Agent 辅助整理材料，可以直接使用文首的命令行处理提示词，让其输出符合约定的 Markdown 文档、组织图片目录并完成 Word 转换。
 
 ## 输入格式
 
@@ -192,7 +216,7 @@ export interface DocumentAsset {
 
 ## 命令行使用
 
-GitHub Release 会提供可直接下载的 `md2doc-cli.mjs`。如果只需要 main 分支的最新版本，也可以使用 GitHub Pages 上的固定地址：
+GitHub Release 会提供可直接下载的独立 `md2doc-cli.mjs`。脚本已内嵌转换所需的第三方依赖，下载后无需 `npm install`、`pnpm install` 或本地构建。需要 main 分支最新版本时，也可以使用 GitHub Pages 上的固定地址：
 
 ```text
 https://huluntuntao.github.io/cau-md2docx/downloads/md2doc-cli.mjs
@@ -216,18 +240,9 @@ node md2doc-cli.mjs report.zip -o report.docx --template template.json
 bun md2doc-cli.mjs report.zip -o report.docx
 ```
 
-如果后续将脚本发布为 npm 包，可使用 npm 或 pnpm 的包执行命令运行；npm/pnpm 是包执行器，实际执行环境仍是 Node.js：
-
-```bash
-npm exec md2doc -- report.zip -o report.docx
-pnpm dlx md2doc report.zip -o report.docx
-```
-
-本地验证过的工具版本：
+独立脚本已验证可以使用以下运行环境直接执行：
 
 - Node.js `v24.11.1`
-- npm `11.6.2`
-- pnpm `10.22.0`
 - Bun `1.3.12`
 
 ## 离线网页版
@@ -343,9 +358,9 @@ https://huluntuntao.github.io/cau-md2docx/
 
 部署到其他子路径时，需要同步调整 [apps/web/vite.config.ts](apps/web/vite.config.ts) 中的 `base`。
 
-推送 `v*` 标签时，workflow 会构建并发布 GitHub Release 附件：
+推送 `v*` 标签时，workflow 会构建并发布对应版本的 GitHub Release 附件：
 
 - `md2doc-cli.mjs`
 - `md2doc-offline.html`
 
-同时，推送到 `main` 会把最新 CLI 和离线版复制到 GitHub Pages 的 `downloads/` 目录，形成固定 latest 下载地址。
+同时，推送到 `main` 会把最新 CLI 和离线版复制到 GitHub Pages 的 `downloads/` 目录，形成固定 latest 下载地址。Release 中的 CLI 和 Pages 中的 CLI 均为无需额外安装依赖的单文件产物；Pages 对应 `main` 最新构建，Release 对应发布标签所固定的版本。
