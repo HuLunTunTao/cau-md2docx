@@ -659,11 +659,16 @@ function captionNumber(
 
 function stripCaptionPrefix(kind: "figure" | "table", caption: string): string {
   const label = kind === "figure" ? "图" : "表";
-  const pattern = new RegExp(
-    `^${label}\\s*([0-9]+(?:[-－][0-9]+)?|[一二三四五六七八九十百]+)?[\\s：:、.-]*(.*)$`
+  const trimmed = caption.trim();
+  const numberedPattern = new RegExp(
+    `^${label}\\s*([0-9]+(?:[-－][0-9]+)?|[一二三四五六七八九十百]+)(?:\\s+|[：:、.-]+)(.*)$`
   );
-  const match = caption.trim().match(pattern);
-  return match?.[2]?.trim() || caption.trim();
+  const numberedMatch = trimmed.match(numberedPattern);
+  if (numberedMatch) return numberedMatch[2]?.trim() || trimmed;
+
+  const plainPattern = new RegExp(`^${label}\\s+(.*)$`);
+  const plainMatch = trimmed.match(plainPattern);
+  return plainMatch?.[1]?.trim() || trimmed;
 }
 
 function imageParagraphStyle(template: FormatTemplate): ParagraphStyle {

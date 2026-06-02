@@ -212,6 +212,27 @@ describe("renderDocx", () => {
     expect(documentXml).toContain("图2 处理流程图");
   });
 
+  it("keeps leading digits in caption text when adding automatic numbers", async () => {
+    const model: DocumentModel = {
+      nodes: [
+        { type: "heading", depth: 2, text: "样本处理" },
+        { type: "image", alt: "流程", url: "a.png", caption: "图 0级样本处理流程示例" },
+        { type: "image", alt: "结构", url: "a.png", caption: "图1 已编号结构图" }
+      ]
+    };
+
+    const bytes = await renderDocx({
+      model,
+      template: cauCoursePaperTemplate,
+      assets: [{ path: "a.png", fileName: "a.png", mimeType: "image/png", data: png1x1 }]
+    });
+    const zip = await JSZip.loadAsync(bytes);
+    const documentXml = await zip.file("word/document.xml")!.async("string");
+
+    expect(documentXml).toContain("图1-1 0级样本处理流程示例");
+    expect(documentXml).toContain("图1-2 已编号结构图");
+  });
+
   it("keeps raw captions when caption numbering is disabled", async () => {
     const model: DocumentModel = {
       nodes: [
