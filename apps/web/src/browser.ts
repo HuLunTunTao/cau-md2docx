@@ -2,6 +2,7 @@ import type { DocumentAsset, FormatTemplate } from "@md2doc/shared";
 import { normalizeTemplate } from "@md2doc/template-core";
 import { readZipDocumentPackage as readZipDocumentPackageData } from "@md2doc/document-package";
 import type { ZipDocumentPackage } from "@md2doc/document-package";
+import coverUrl from "./assets/cau-cover.docx?url";
 
 const USER_TEMPLATES_KEY = "md2doc.userTemplates";
 
@@ -29,6 +30,11 @@ export function triggerDownload(blob: Blob, fileName: string): void {
   anchor.download = fileName;
   anchor.click();
   URL.revokeObjectURL(url);
+}
+
+export async function loadDefaultCover(): Promise<Uint8Array> {
+  const response = await fetch(coverUrl);
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 async function readImageDimensions(

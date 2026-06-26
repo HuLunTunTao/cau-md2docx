@@ -22,6 +22,7 @@ import type {
   RenderDocxInput
 } from "@md2doc/shared";
 import { charsToTwip, cmToTwip, ptToEighthPoint, ptToHalfPoint } from "@md2doc/shared";
+import { injectCover } from "./cover-inject";
 
 const PAGE_WIDTH_CM = 21;
 const FALLBACK_PNG_1X1 = Uint8Array.from([
@@ -67,7 +68,8 @@ export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
 
   const packed = await Packer.toArrayBuffer(doc);
   const bytes = new Uint8Array(packed);
-  return patchDocx(bytes, input.template);
+  const patched = await patchDocx(bytes, input.template);
+  return input.coverBytes ? injectCover(patched, input.coverBytes) : patched;
 }
 
 function renderNode(

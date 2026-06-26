@@ -5,11 +5,14 @@ import { renderDocx } from "@md2doc/docx-renderer";
 import { readZipDocumentPackage } from "@md2doc/document-package";
 import { parseMarkdown } from "@md2doc/markdown-core";
 import { getBuiltInTemplates, importTemplate } from "@md2doc/template-core";
+import { coverDocxBase64 } from "./generated/cover.js";
 
 interface CliOptions {
   inputPath?: string;
   outputPath?: string;
   templatePath?: string;
+  cover: boolean;
+  coverFile?: string;
   help: boolean;
   version: boolean;
 }
@@ -46,11 +49,17 @@ export async function run(argv: string[]): Promise<number> {
       : getBuiltInTemplates()[0];
     const model = parseMarkdown(documentPackage.markdown);
     const outputPath = options.outputPath ?? defaultOutputPath(options.inputPath, documentPackage.markdownName);
+    const coverBytes = options.coverFile
+      ? await readFile(options.coverFile)
+      : options.cover
+        ? Uint8Array.from(Buffer.from(coverDocxBase64, "base64"))
+        : undefined;
     const bytes = await renderDocx({
       model,
       template,
       assets: documentPackage.assets,
-      metadata: { title: documentPackage.markdownName.replace(/\.(md|markdown)$/i, "") }
+      metadata: { title: documentPackage.markdownName.replace(/\.(md|markdown)$/i, "") },
+      coverBytes
     });
 
     await writeFile(outputPath, bytes);
@@ -64,7 +73,7 @@ export async function run(argv: string[]): Promise<number> {
 }
 
 function parseArgs(argv: string[]): CliOptions {
-  const options: CliOptions = { help: false, version: false };
+  const options: CliOptions = { cover: false, help: false, version: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "-h" || arg === "--help") {
@@ -76,6 +85,11 @@ function parseArgs(argv: string[]): CliOptions {
       index += 1;
     } else if (arg === "--template") {
       options.templatePath = readOptionValue(argv, index, arg);
+      index += 1;
+    } else if (arg === "--cover") {
+      options.cover = true;
+    } else if (arg === "--cover-file") {
+      options.coverFile = readOptionValue(argv, index, arg);
       index += 1;
     } else if (arg.startsWith("-")) {
       throw new Error(`未知参数：${arg}`);
@@ -218,11 +232,13 @@ function textFromAscii(data: Uint8Array): string {
 
 function helpText(): string {
   return `用法：
-  md2doc <input.zip> [-o output.docx] [--template template.json]
+  md2doc <input.zip> [-o output.docx] [--template template.json] [--cover | --cover-file cover.docx]
 
 选项：
   -o, --output <file>       指定输出 Word 文件名
   --template <file>         使用网页导出的模板 JSON，默认使用 CAU 课程论文模板
+  --cover                   添加默认封面（中国农业大学本科生课程论文封面）
+  --cover-file <file>       使用指定的封面 docx 文件，隐含 --cover
   -v, --version             显示版本号
   -h, --help                显示帮助
 `;

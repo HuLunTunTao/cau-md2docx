@@ -10,6 +10,7 @@ import {
 } from "@md2doc/template-core";
 import { TemplateEditor } from "./TemplateEditor";
 import {
+  loadDefaultCover,
   loadUserTemplates,
   readZipDocumentPackage,
   saveUserTemplates,
@@ -112,6 +113,8 @@ export function App() {
   const [isConverting, setIsConverting] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [downloadName, setDownloadName] = useState("");
+  const [coverEnabled, setCoverEnabled] = useState(false);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const templates = useMemo(() => [...builtInTemplates, ...userTemplates], [userTemplates]);
   const selectedTemplate = templates.find((item) => item.id === selectedTemplateId) ?? templates[0];
@@ -146,11 +149,17 @@ export function App() {
         .map((node) => node.url)
         .filter((url) => !hasAsset(url, documentPackage.assets));
 
+      const coverBytes = coverEnabled
+        ? coverFile
+          ? new Uint8Array(await coverFile.arrayBuffer())
+          : await loadDefaultCover()
+        : undefined;
       const bytes = await renderDocx({
         model,
         template: selectedTemplate,
         assets: documentPackage.assets,
-        metadata: { title: documentPackage.markdownName.replace(/\.(md|markdown)$/i, "") }
+        metadata: { title: documentPackage.markdownName.replace(/\.(md|markdown)$/i, "") },
+        coverBytes
       });
 
       const fileName = normalizedOutputName(outputName, documentPackage.markdownName);
@@ -260,6 +269,28 @@ export function App() {
         <label className="field">
           <span>输出文件名</span>
           <input value={outputName} onChange={(event) => setOutputName(event.target.value)} />
+        </label>
+        <label className="field">
+          <span>封面</span>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={coverEnabled}
+              onChange={(event) => setCoverEnabled(event.target.checked)}
+            />
+            <span>添加封面（默认：中国农业大学本科生课程论文封面）</span>
+          </label>
+          {coverEnabled && (
+            <label className="button-like">
+              使用自定义封面
+              <input
+                type="file"
+                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+              />
+            </label>
+          )}
+          {coverEnabled && coverFile && <small>自定义封面：{coverFile.name}</small>}
         </label>
       </section>
 

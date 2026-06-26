@@ -129,6 +129,7 @@ export interface RenderDocxInput {
     title?: string;
     author?: string;
   };
+  coverBytes?: Uint8Array;
 }
 
 export function cmToTwip(cm: number): number {
