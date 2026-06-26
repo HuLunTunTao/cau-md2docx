@@ -24,10 +24,30 @@ select {
 }
 
 .checkbox {
-  display: flex;
-  align-items: center;
+  display: inline-flex;
+  align-items: flex-start;
   gap: 8px;
+  width: fit-content;
   cursor: pointer;
+}
+
+.checkbox input {
+  width: auto;
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.cover-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #e3dacf;
+  border-radius: 8px;
+  background: #fbf8f2;
+  padding: 12px 14px;
 }
 
 .shell {
@@ -105,12 +125,51 @@ legend {
   color: #6f6a61;
 }
 
+.file-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.file-panel h2 {
+  margin-bottom: 0;
+}
+
+.file-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(280px, 0.72fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.zip-upload,
+.output-name-field,
+.cover-field {
+  gap: 8px;
+}
+
 .zip-rules {
+  display: grid;
+  gap: 8px;
   align-content: start;
   border: 1px dashed #cfc7bb;
   border-radius: 8px;
-  padding: 12px;
+  padding: 14px 16px;
   background: #faf6ef;
+}
+
+.zip-rules span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3c4043;
+}
+
+.zip-rules small {
+  color: #6f6a61;
+  line-height: 1.55;
+}
+
+.cover-field small {
+  margin-top: -2px;
 }
 
 input,
@@ -263,6 +322,10 @@ button:disabled {
 @media (max-width: 820px) {
   .two,
   .four {
+    grid-template-columns: 1fr;
+  }
+
+  .file-grid {
     grid-template-columns: 1fr;
   }
 

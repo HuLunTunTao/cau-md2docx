@@ -245,10 +245,10 @@ export function App() {
         </div>
       </header>
 
-      <section className="panel">
+      <section className="panel file-panel">
         <h2>文件</h2>
-        <div className="grid two">
-          <label className="field">
+        <div className="file-grid">
+          <label className="field zip-upload">
             <span>文档 zip 包</span>
             <input
               type="file"
@@ -261,37 +261,39 @@ export function App() {
             />
             <small>{zipFile ? zipFile.name : "zip 内应包含一个 .md/.markdown 文件和 images/ 目录"}</small>
           </label>
-          <div className="field zip-rules">
+          <div className="zip-rules">
             <span>zip 结构要求</span>
             <small>推荐结构：根目录放一个 Markdown 文档，图片放在 images/ 下，文档用 `images/xxx.png` 相对路径引用。</small>
           </div>
         </div>
-        <label className="field">
+        <label className="field output-name-field">
           <span>输出文件名</span>
           <input value={outputName} onChange={(event) => setOutputName(event.target.value)} />
         </label>
-        <label className="field">
+        <div className="field cover-field">
           <span>封面</span>
-          <label className="checkbox">
-            <input
-              type="checkbox"
-              checked={coverEnabled}
-              onChange={(event) => setCoverEnabled(event.target.checked)}
-            />
-            <span>添加封面（默认：中国农业大学本科生课程论文封面）</span>
-          </label>
-          {coverEnabled && (
-            <label className="button-like">
-              使用自定义封面
+          <div className="cover-card">
+            <label className="checkbox">
               <input
-                type="file"
-                accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                type="checkbox"
+                checked={coverEnabled}
+                onChange={(event) => setCoverEnabled(event.target.checked)}
               />
+              添加封面（默认：CAU 本科生课程论文封面）
             </label>
-          )}
+            {coverEnabled && (
+              <label className="button-like">
+                使用自定义封面
+                <input
+                  type="file"
+                  accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
+          </div>
           {coverEnabled && coverFile && <small>自定义封面：{coverFile.name}</small>}
-        </label>
+        </div>
       </section>
 
       <section className="panel prompt-panel">
