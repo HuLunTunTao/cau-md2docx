@@ -3,8 +3,11 @@ import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import mermaid from "mermaid";
 import type { MermaidDiagramType, MermaidStyle } from "@md2doc/shared";
 import wasmUrl from "@resvg/resvg-wasm/index_bg.wasm?url";
+import chineseFontUrl from "@fontsource/noto-serif-sc/files/noto-serif-sc-chinese-simplified-400-normal.woff2?url";
+import latinFontUrl from "@fontsource/noto-serif-sc/files/noto-serif-sc-latin-400-normal.woff2?url";
 
 let wasmReady: Promise<void> | undefined;
+let embeddedFonts: Promise<Uint8Array[]> | undefined;
 let diagramSequence = 0;
 
 export interface MermaidPng {
@@ -23,23 +26,27 @@ export async function renderMermaidPng(source: string, style: MermaidStyle): Pro
     startOnLoad: false,
     securityLevel: "strict",
     theme: "base",
-    fontFamily: "Arial, 'Microsoft YaHei', 'PingFang SC', sans-serif",
+    fontFamily: "'Noto Serif SC', serif",
     flowchart: { htmlLabels: false },
     sequence: { useMaxWidth: true },
     gantt: { useMaxWidth: true }
   });
   const id = `md2doc-mermaid-${diagramSequence++}`;
   const rendered = await mermaid.render(id, source);
-  const svg = normalizeSvgForPng(
-    style.academicMonochrome ? applyAcademicMonochrome(rendered.svg) : rendered.svg,
-    diagramType
-  );
+  const svg = normalizeSvgForPng(style.academicMonochrome ? applyAcademicMonochrome(rendered.svg) : rendered.svg);
   if (!wasmReady) wasmReady = initWasm(loadWasm());
+  if (!embeddedFonts) embeddedFonts = Promise.all([loadAsset(chineseFontUrl), loadAsset(latinFontUrl)]);
   await wasmReady;
+  const fontBuffers = await embeddedFonts;
   const resvg = new Resvg(svg, {
     background: "white",
     fitTo: { mode: "zoom", value: 2 },
-    font: { defaultFontFamily: "Arial" }
+    font: {
+      fontBuffers,
+      defaultFontFamily: "Noto Serif SC",
+      serifFamily: "Noto Serif SC",
+      sansSerifFamily: "Noto Serif SC"
+    }
   });
   const pngImage = resvg.render();
   const data = pngImage.asPng();
@@ -50,12 +57,16 @@ export async function renderMermaidPng(source: string, style: MermaidStyle): Pro
 }
 
 async function loadWasm(): Promise<ArrayBuffer> {
-  if (typeof process !== "undefined" && !wasmUrl.startsWith("data:")) {
+  const bytes = await loadAsset(wasmUrl);
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+async function loadAsset(url: string): Promise<Uint8Array> {
+  if (typeof process !== "undefined" && !url.startsWith("data:")) {
     const { readFile } = await import("node:fs/promises");
-    const bytes = await readFile(wasmUrl.replace(/^\/@fs/u, ""));
-    return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    return new Uint8Array(await readFile(url.replace(/^\/@fs/u, "")));
   }
-  return fetch(wasmUrl).then((response) => response.arrayBuffer());
+  return new Uint8Array(await fetch(url).then((response) => response.arrayBuffer()) as ArrayBuffer);
 }
 
 export function detectMermaidDiagramType(source: string): MermaidDiagramType {
@@ -94,31 +105,45 @@ function applyAcademicMonochrome(svg: string): string {
     .edgeLabel rect, .labelBkg { fill: #ffffff !important; opacity: 1 !important; }
     .node, .cluster, .edgePath, .messageLine0, .messageLine1 { filter: none !important; }
   ]]></style>`;
-  return svg.replace(/<svg\b[^>]*>/u, (opening) => `${opening}${css}`);
+  return svg
+    .replace(/\sstyle="([^"]*)"/gu, (_match, declarations: string) => {
+      const withoutColors = declarations.replace(/(?:fill|stroke|color)\s*:[^;"]*;?/giu, "");
+      return withoutColors ? ` style="${withoutColors}"` : "";
+    })
+    .replace(/<\/svg>/u, `${css}</svg>`);
 }
 
-function normalizeSvgForPng(svg: string, diagramType: MermaidDiagramType): string {
+function normalizeSvgForPng(svg: string): string {
   const viewBox = svg.match(/\bviewBox="([^"]+)"/u)?.[1].trim().split(/\s+/u).map(Number);
   const width = viewBox?.[2];
   const height = viewBox?.[3];
   let normalized = svg
     .replace(/\bwidth="100%"/gu, width ? `width="${Math.max(1, Math.ceil(width))}"` : "")
     .replace(/\bheight="100%"/gu, height ? `height="${Math.max(1, Math.ceil(height))}"` : "");
-  // Mermaid's generated CSS is unnecessary after the paper-style override and includes browser-only rules
-  // that resvg's WASM renderer cannot always parse. Keep only the explicit override style.
+  // resvg does not support HTML inside SVG foreignObject. Replace Mermaid labels with positioned SVG text.
   normalized = normalized.replace(/<style(?! id="md2doc-academic-monochrome")[^>]*>[\s\S]*?<\/style>/gu, "");
   normalized = normalized.replace(
-    /<foreignObject\b[^>]*>[\s\S]*?<p>([\s\S]*?)<\/p>[\s\S]*?<\/foreignObject>/gu,
-    (_match, label: string) => `<text x="0" y="0" text-anchor="middle" dominant-baseline="middle">${escapeXml(label.replace(/<[^>]+>/gu, "").trim())}</text>`
+    /<foreignObject\b([^>]*)>[\s\S]*?<p>([\s\S]*?)<\/p>[\s\S]*?<\/foreignObject>/gu,
+    (_match, attributes: string, label: string) => createSvgTextLabel(attributes, label)
   );
   normalized = normalized.replace(/<foreignObject\b[^>]*>[\s\S]*?<\/foreignObject>/gu, "");
-  if (diagramType === "flowchart" || diagramType === "state") {
-    normalized = normalized
-      .replace(/<defs>[\s\S]*?<\/defs>/gu, "")
-      .replace(/\smarker-(?:start|end)="[^"]*"/gu, "")
-      .replace(/\sfilter="[^"]*"/gu, "");
-  }
   return normalized;
+}
+
+function createSvgTextLabel(attributes: string, label: string): string {
+  const x = readSvgNumber(attributes, "x");
+  const y = readSvgNumber(attributes, "y");
+  const width = readSvgNumber(attributes, "width");
+  const height = readSvgNumber(attributes, "height");
+  const lines = label.replace(/<br\s*\/?\s*>/giu, "\n").replace(/<[^>]+>/gu, "").trim().split(/\n+/u);
+  const middleX = x + width / 2;
+  const firstY = y + height / 2 - ((lines.length - 1) * 9);
+  return `<text x="${middleX}" y="${firstY}" text-anchor="middle" dominant-baseline="middle">${lines.map((line, index) => `<tspan x="${middleX}" dy="${index === 0 ? 0 : 18}">${escapeXml(line.trim())}</tspan>`).join("")}</text>`;
+}
+
+function readSvgNumber(attributes: string, name: string): number {
+  const value = attributes.match(new RegExp(`\\b${name}="([\\d.]+)"`, "u"))?.[1];
+  return value ? Number(value) : 0;
 }
 
 function escapeXml(value: string): string {

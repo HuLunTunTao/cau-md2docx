@@ -105,6 +105,7 @@ flowchart TD
 - 暂不提供 PDF 导出。
 - 暂不处理参考文献专用格式。
 - 模板系统覆盖论文常见排版项，不是完整 Word 样式编辑器。
+- Mermaid 图表内嵌 Noto Serif SC（思源宋体风格）的常规字重，以保证网页、离线版和 CLI 导出的 PNG 图中文字一致；字体版权归 Google Inc.，采用 SIL Open Font License 1.1，完整许可证见 [docs/licenses/Noto-Serif-SC-OFL-1.1.txt](docs/licenses/Noto-Serif-SC-OFL-1.1.txt)。
 
 ## 使用流程
 

@@ -105,6 +105,9 @@ importers:
 
   packages/docx-renderer:
     dependencies:
+      '@fontsource/noto-serif-sc':
+        specifier: 5.2.8
+        version: 5.2.8
       '@md2doc/shared':
         specifier: workspace:*
         version: link:../shared
@@ -385,6 +388,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/noto-serif-sc@5.2.8':
+    resolution: {integrity: sha512-C7fAr+d1GjOAw1qIbntsnqbA3l5dkdzcmNNgeCXLC8QZ7VNubL7MTrX8UcYKHceX4mI//z8gGtXbOeeQrB6P7g==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -1779,6 +1785,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.7':
     optional: true
+
+  '@fontsource/noto-serif-sc@5.2.8': {}
 
   '@iconify/types@2.0.0': {}
 

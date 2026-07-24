@@ -11,6 +11,7 @@
     "test": "vitest run src --passWithNoTests"
   },
   "dependencies": {
+    "@fontsource/noto-serif-sc": "5.2.8",
     "@md2doc/shared": "workspace:*",
     "@resvg/resvg-wasm": "2.6.2",
     "linkedom": "0.18.12",
