@@ -2,12 +2,18 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  Footer,
   ImageRun,
+  NumberFormat,
   Packer,
   Paragraph,
+  PageNumber,
+  Tab,
+  TabStopType,
   Table,
   TableCell,
   TableRow,
+  TableOfContents,
   TextRun,
   WidthType
 } from "docx";
@@ -41,35 +47,209 @@ export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
     tableChapterCounter: 0,
     section: undefined
   };
-  const children = input.model.nodes.flatMap((node) =>
-    renderNode(node, input.template, input.assets, context)
-  );
+  const sections = createDocumentSections(input, context);
 
   const doc = new Document({
     creator: input.metadata?.author,
     title: input.metadata?.title,
     styles: createStyles(input.template),
-    sections: [
-      {
-        properties: {
-          page: {
-            margin: {
-              top: cmToTwip(input.template.page.marginTopCm),
-              bottom: cmToTwip(input.template.page.marginBottomCm),
-              left: cmToTwip(input.template.page.marginLeftCm),
-              right: cmToTwip(input.template.page.marginRightCm)
-            }
-          }
-        },
-        children
-      }
-    ]
+    features: {
+      updateFields: input.template.tableOfContents.enabled
+    },
+    sections
   });
 
   const packed = await Packer.toArrayBuffer(doc);
   const bytes = new Uint8Array(packed);
   const patched = await patchDocx(bytes, input.template);
   return input.coverBytes ? injectCover(patched, input.coverBytes) : patched;
+}
+
+function createDocumentSections(input: RenderDocxInput, context: RenderContext) {
+  const shouldSplit = input.template.tableOfContents.enabled || input.template.pageNumbering.enabled;
+  if (!shouldSplit) {
+    return [
+      {
+        properties: sectionProperties(input.template),
+        children: renderNodes(input.model.nodes, input.template, input.assets, context)
+      }
+    ];
+  }
+
+  const bodyStartIndex = input.model.nodes.findIndex(
+    (node) => node.type === "heading" && node.depth >= 2
+  );
+  if (bodyStartIndex < 0) {
+    const children = renderNodes(input.model.nodes, input.template, input.assets, context);
+    if (input.template.tableOfContents.enabled) {
+      children.push(...tocChildren(input.template, children.length > 0, input.model.nodes, input.model.nodes));
+    }
+    return [
+      {
+        properties: sectionProperties(input.template, "front"),
+        footers: frontMatterFooter(input.template),
+        children
+      }
+    ];
+  }
+
+  const frontNodes = input.model.nodes.slice(0, bodyStartIndex);
+  const bodyNodes = input.model.nodes.slice(bodyStartIndex);
+  const frontChildren = renderNodes(frontNodes, input.template, input.assets, context);
+  if (input.template.tableOfContents.enabled) {
+    frontChildren.push(...tocChildren(input.template, frontChildren.length > 0, bodyNodes, input.model.nodes));
+  }
+  const bodyChildren = renderNodes(bodyNodes, input.template, input.assets, context);
+
+  return [
+    {
+      properties: sectionProperties(input.template, "front"),
+      footers: frontMatterFooter(input.template),
+      children: frontChildren
+    },
+    {
+      properties: sectionProperties(input.template, "body"),
+      footers: bodyFooter(input.template),
+      children: bodyChildren
+    }
+  ];
+}
+
+function renderNodes(
+  nodes: DocumentNode[],
+  template: FormatTemplate,
+  assets: DocumentAsset[],
+  context: RenderContext
+): Array<Paragraph | Table> {
+  return nodes.flatMap((node) => renderNode(node, template, assets, context));
+}
+
+function sectionProperties(template: FormatTemplate, kind?: "front" | "body") {
+  return {
+    page: {
+      margin: {
+        top: cmToTwip(template.page.marginTopCm),
+        bottom: cmToTwip(template.page.marginBottomCm),
+        left: cmToTwip(template.page.marginLeftCm),
+        right: cmToTwip(template.page.marginRightCm)
+      },
+      pageNumbers:
+        template.pageNumbering.enabled && kind === "front" && template.pageNumbering.frontMatterFormat !== "none"
+          ? { start: 1, formatType: NumberFormat.UPPER_ROMAN }
+          : template.pageNumbering.enabled && kind === "body"
+            ? { start: template.pageNumbering.bodyStart, formatType: NumberFormat.DECIMAL }
+            : undefined
+    }
+  };
+}
+
+function frontMatterFooter(template: FormatTemplate) {
+  if (!template.pageNumbering.enabled || template.pageNumbering.frontMatterFormat === "none") return undefined;
+  return { default: pageNumberFooter() };
+}
+
+function bodyFooter(template: FormatTemplate) {
+  if (!template.pageNumbering.enabled) return undefined;
+  return { default: pageNumberFooter() };
+}
+
+function pageNumberFooter(): Footer {
+  return new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [new TextRun({ children: [PageNumber.CURRENT] })]
+      })
+    ]
+  });
+}
+
+function tocChildren(
+  template: FormatTemplate,
+  pageBreakBefore: boolean,
+  nodes: DocumentNode[],
+  allNodes: DocumentNode[]
+): Array<Paragraph | TableOfContents> {
+  const paperTitle = allNodes.find(
+    (node): node is Extract<DocumentNode, { type: "heading" }> =>
+      node.type === "heading" && node.depth === 1
+  )?.text;
+  return [
+    ...(paperTitle
+      ? [paragraph(paperTitle, tocPaperTitleStyle(template), "TocPaperTitle", template, { pageBreakBefore })]
+      : []),
+    paragraph(tocDisplayTitle(template.tableOfContents.title), template.tocTitle, "TocTitle", template, {
+      pageBreakBefore: !paperTitle && pageBreakBefore
+    }),
+    new TableOfContents(template.tableOfContents.title, {
+      hyperlink: true,
+      stylesWithLevels: tocStylesWithLevels(template.tableOfContents.maxDepth),
+      contentChildren: tocPreviewParagraphs(template, nodes)
+    })
+  ];
+}
+
+function tocStylesWithLevels(maxDepth: 1 | 2 | 3) {
+  const styles = [{ styleName: "一级标题", level: 1 }];
+  if (maxDepth >= 2) styles.push({ styleName: "二级标题", level: 2 });
+  if (maxDepth >= 3) styles.push({ styleName: "三级标题", level: 3 });
+  return styles;
+}
+
+function tocPreviewParagraphs(template: FormatTemplate, nodes: DocumentNode[]): Paragraph[] {
+  const tocContext: RenderContext = {
+    headingCounters: [0, 0, 0],
+    figureCounter: 0,
+    tableCounter: 0,
+    figureChapterCounter: 0,
+    tableChapterCounter: 0,
+    section: undefined
+  };
+  return nodes
+    .filter((node): node is Extract<DocumentNode, { type: "heading" }> =>
+      node.type === "heading" && headingNumberingLevel(node.depth) > 0 && headingNumberingLevel(node.depth) <= template.tableOfContents.maxDepth
+    )
+    .map((node) => {
+      const level = headingNumberingLevel(node.depth);
+      const text = headingText(node.depth, node.text, template, tocContext);
+      if (level === 1) {
+        return new Paragraph({
+          style: "TocEntry1",
+          children: [
+            new TextRun({
+              text
+            })
+          ]
+        });
+      }
+      return new Paragraph({
+        style: "TocEntry2",
+        indent: {
+          left: cmToTwip(0.45)
+        },
+        tabStops: [
+          {
+            type: TabStopType.RIGHT,
+            position: tocTabStopPosition(template),
+            leader: "dot"
+          }
+        ],
+        children: [
+          new TextRun({
+            children: [text, new Tab()]
+          })
+        ]
+      });
+    });
+}
+
+function tocDisplayTitle(title: string): string {
+  return title.trim() === "目录" ? "目  录" : title;
+}
+
+function tocTabStopPosition(template: FormatTemplate): number {
+  const pageWidth = cmToTwip(PAGE_WIDTH_CM);
+  return pageWidth - cmToTwip(template.page.marginLeftCm) - cmToTwip(template.page.marginRightCm);
 }
 
 function renderNode(
@@ -176,10 +356,12 @@ function paragraph(
   text: string,
   style: ParagraphStyle,
   styleId: string,
-  template: FormatTemplate
+  template: FormatTemplate,
+  options: { pageBreakBefore?: boolean } = {}
 ): Paragraph {
   return new Paragraph({
     style: styleId,
+    pageBreakBefore: options.pageBreakBefore,
     alignment: toDocxAlignment(style.alignment),
     spacing: {
       before: style.spacingBeforePt ? Math.round(style.spacingBeforePt * 20) : undefined,
@@ -604,10 +786,50 @@ function createStyles(template: FormatTemplate) {
       paragraphStyle("AbstractText", "摘要正文", template.styles.abstract, template),
       paragraphStyle("KeywordTitle", "关键词标题", template.keywordTitle, template),
       paragraphStyle("KeywordsText", "关键词", template.keywords, template),
+      paragraphStyle("TocPaperTitle", "目录页论文标题", tocPaperTitleStyle(template), template),
+      paragraphStyle("TocTitle", "目录标题", template.tocTitle, template),
+      paragraphStyle("TocEntry1", "目录一级条目", tocEntry1Style(template), template),
+      paragraphStyle("TocEntry2", "目录二级条目", tocEntry2Style(template), template),
       paragraphStyle("TableCaption", "表题", tableCaptionStyle(template), template),
       paragraphStyle("FigureCaption", "图题", figureCaptionStyle(template), template),
       paragraphStyle("ImageParagraph", template.image.paragraphStyleName, imageParagraphStyle(template), template)
     ]
+  };
+}
+
+function tocPaperTitleStyle(template: FormatTemplate): ParagraphStyle {
+  return {
+    ...template.styles.title,
+    fontFamily: "黑体",
+    fontSizePt: 18,
+    bold: true,
+    alignment: "center",
+    firstLineIndentChars: 0,
+    spacingAfterPt: 30
+  };
+}
+
+function tocEntry1Style(template: FormatTemplate): ParagraphStyle {
+  return {
+    ...template.styles.body,
+    fontSizePt: 12,
+    bold: true,
+    alignment: "left",
+    firstLineIndentChars: 0,
+    spacingBeforePt: 12,
+    spacingAfterPt: 8
+  };
+}
+
+function tocEntry2Style(template: FormatTemplate): ParagraphStyle {
+  return {
+    ...template.styles.body,
+    fontSizePt: 12,
+    bold: false,
+    alignment: "left",
+    firstLineIndentChars: 0,
+    spacingBeforePt: 4,
+    spacingAfterPt: 8
   };
 }
 

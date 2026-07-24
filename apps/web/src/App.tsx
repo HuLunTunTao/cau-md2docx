@@ -79,6 +79,7 @@ const markdownPrompt = `请整理一份可被“论文格式自动整理”网�
 13. 表格内容只写数据，不要在表格内部写表题。
 14. 正文段落保持自然中文论文表达，避免使用 HTML。
 15. 如果需要代码块，使用 fenced code block。
+16. 如果选择了“含目录页码”模板，生成 Word 后必须提醒用户用 Word/WPS 打开并更新目录/域，目录页码才可靠。
 
 示例：
 
@@ -178,10 +179,13 @@ export function App() {
       setMessages([
         `已整理 ${fileName}，请点击“下载 Word”保存文件。`,
         `已读取文档：${documentPackage.markdownPath}；图片资源：${documentPackage.assets.length} 个。`,
+        selectedTemplate.tableOfContents.enabled
+          ? "当前模板启用了目录：下载后请用 Word/WPS 打开并更新目录/域，目录页码才可靠。"
+          : "",
         missingImages.length
           ? `有 ${missingImages.length} 张图片未匹配，已在文档中写入缺失提示。`
           : "图片资源已全部匹配。"
-      ]);
+      ].filter((message): message is string => Boolean(message)));
     } catch (error) {
       setMessages([error instanceof Error ? error.message : "整理失败。"]);
     } finally {
@@ -357,6 +361,9 @@ export function App() {
               </option>
             ))}
           </select>
+          {selectedTemplate.tableOfContents.enabled && (
+            <small>当前模板会生成 Word 目录字段。下载后请用 Word/WPS 更新目录/域，以刷新目录页码。</small>
+          )}
         </label>
         <TemplateEditor template={selectedTemplate} onChange={handleTemplateChange} />
       </section>

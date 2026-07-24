@@ -159,11 +159,50 @@ export const cauCoursePaperTemplate: FormatTemplate = {
   captionNumbering: {
     figureEnabled: true,
     tableEnabled: true
+  },
+  tableOfContents: {
+    enabled: false,
+    maxDepth: 2,
+    title: "目录"
+  },
+  pageNumbering: {
+    enabled: false,
+    frontMatterFormat: "upperRoman",
+    bodyFormat: "decimal",
+    bodyStart: 1
+  },
+  tocTitle: {
+    fontFamily: "黑体",
+    fontSizePt: 16,
+    bold: true,
+    color: "000000",
+    alignment: "center",
+    lineSpacingPt: 20,
+    firstLineIndentChars: 0,
+    spacingBeforePt: 0,
+    spacingAfterPt: 12
+  }
+};
+
+export const cauCoursePaperWithTocTemplate: FormatTemplate = {
+  ...structuredClone(cauCoursePaperTemplate),
+  id: "cau-course-paper-toc",
+  displayName: "CAU 课程论文（含目录页码）",
+  tableOfContents: {
+    ...cauCoursePaperTemplate.tableOfContents,
+    enabled: true
+  },
+  pageNumbering: {
+    ...cauCoursePaperTemplate.pageNumbering,
+    enabled: true
   }
 };
 
 export function getBuiltInTemplates(): FormatTemplate[] {
-  return [structuredClone(cauCoursePaperTemplate)];
+  return [
+    structuredClone(cauCoursePaperTemplate),
+    structuredClone(cauCoursePaperWithTocTemplate)
+  ];
 }
 
 export function validateTemplate(template: unknown): FormatTemplateValidationResult {
@@ -205,6 +244,9 @@ export function validateTemplate(template: unknown): FormatTemplateValidationRes
   if (!item.figureCaption) errors.push("模板缺少图题样式。");
   if (!item.headingNumbering) errors.push("模板缺少标题自动编号设置。");
   if (!item.captionNumbering) errors.push("模板缺少题注自动编号设置。");
+  if (!item.tableOfContents) errors.push("模板缺少目录设置。");
+  if (!item.pageNumbering) errors.push("模板缺少页码设置。");
+  if (!item.tocTitle) errors.push("模板缺少目录标题样式。");
 
   return { ok: errors.length === 0, errors };
 }
@@ -279,6 +321,18 @@ export function normalizeTemplate(template: Partial<FormatTemplate>): FormatTemp
     captionNumbering: {
       ...structuredClone(cauCoursePaperTemplate.captionNumbering),
       ...template.captionNumbering
+    },
+    tableOfContents: {
+      ...structuredClone(cauCoursePaperTemplate.tableOfContents),
+      ...template.tableOfContents
+    },
+    pageNumbering: {
+      ...structuredClone(cauCoursePaperTemplate.pageNumbering),
+      ...template.pageNumbering
+    },
+    tocTitle: {
+      ...structuredClone(cauCoursePaperTemplate.tocTitle),
+      ...template.tocTitle
     }
   };
 }

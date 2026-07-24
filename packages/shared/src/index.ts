@@ -75,6 +75,19 @@ export interface CaptionNumberingStyle {
   tableEnabled: boolean;
 }
 
+export interface TableOfContentsStyle {
+  enabled: boolean;
+  maxDepth: 1 | 2 | 3;
+  title: string;
+}
+
+export interface PageNumberingStyle {
+  enabled: boolean;
+  frontMatterFormat: "upperRoman" | "none";
+  bodyFormat: "decimal";
+  bodyStart: number;
+}
+
 export interface FormatTemplate {
   schemaVersion: 1;
   id: string;
@@ -101,6 +114,9 @@ export interface FormatTemplate {
   figureCaption: ParagraphStyle;
   headingNumbering: HeadingNumberingStyle;
   captionNumbering: CaptionNumberingStyle;
+  tableOfContents: TableOfContentsStyle;
+  pageNumbering: PageNumberingStyle;
+  tocTitle: ParagraphStyle;
 }
 
 export interface FormatTemplateValidationResult {

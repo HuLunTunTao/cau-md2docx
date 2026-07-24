@@ -20,7 +20,7 @@ export async function injectCover(
   let injectedBody = rewriteImageRids(coverBodyContent, ridMap);
   injectedBody = rewriteStyleRefs(injectedBody);
 
-  const coverSection = injectedBody + `<w:p><w:pPr>${coverSectPr}</w:pPr></w:p>`;
+  const coverSection = injectedBody + `<w:p><w:pPr>${stripHeaderFooterRefs(coverSectPr)}</w:pPr></w:p>`;
   const mainDocXml = await mainZip.file("word/document.xml")!.async("string");
   mainZip.file("word/document.xml", mainDocXml.replace("<w:body>", "<w:body>" + coverSection));
 
@@ -187,6 +187,12 @@ function rewriteStyleRefs(bodyXml: string): string {
     /(<w:(?:pStyle|rStyle|tblStyle)\s+w:val=")/g,
     `$1${COVER_PREFIX}`
   );
+}
+
+function stripHeaderFooterRefs(sectPr: string): string {
+  return sectPr
+    .replace(/<w:headerReference\b[^>]*\/>/g, "")
+    .replace(/<w:footerReference\b[^>]*\/>/g, "");
 }
 
 async function ensureContentTypes(mainZip: JSZip): Promise<void> {

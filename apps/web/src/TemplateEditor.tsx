@@ -148,11 +148,112 @@ export function TemplateEditor({ template, onChange }: Props) {
           </label>
         </div>
       </fieldset>
+      <fieldset className="style-fields">
+        <legend>目录与页码</legend>
+        <div className="grid four">
+          <label className="field checkbox-field">
+            <span>生成目录</span>
+            <input
+              disabled={readonly}
+              type="checkbox"
+              checked={template.tableOfContents.enabled}
+              onChange={(event) =>
+                patch({
+                  tableOfContents: {
+                    ...template.tableOfContents,
+                    enabled: event.target.checked
+                  }
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>目录标题</span>
+            <input
+              disabled={readonly}
+              value={template.tableOfContents.title}
+              onChange={(event) =>
+                patch({
+                  tableOfContents: {
+                    ...template.tableOfContents,
+                    title: event.target.value || "目录"
+                  }
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>目录层级</span>
+            <select
+              disabled={readonly}
+              value={template.tableOfContents.maxDepth}
+              onChange={(event) =>
+                patch({
+                  tableOfContents: {
+                    ...template.tableOfContents,
+                    maxDepth: Number(event.target.value) as 1 | 2 | 3
+                  }
+                })
+              }
+            >
+              <option value={1}>一级标题</option>
+              <option value={2}>二级标题</option>
+              <option value={3}>三级标题</option>
+            </select>
+          </label>
+          <label className="field checkbox-field">
+            <span>生成页码</span>
+            <input
+              disabled={readonly}
+              type="checkbox"
+              checked={template.pageNumbering.enabled}
+              onChange={(event) =>
+                patch({
+                  pageNumbering: {
+                    ...template.pageNumbering,
+                    enabled: event.target.checked
+                  }
+                })
+              }
+            />
+          </label>
+          <label className="field">
+            <span>前置页码</span>
+            <select
+              disabled={readonly}
+              value={template.pageNumbering.frontMatterFormat}
+              onChange={(event) =>
+                patch({
+                  pageNumbering: {
+                    ...template.pageNumbering,
+                    frontMatterFormat: event.target.value as "upperRoman" | "none"
+                  }
+                })
+              }
+            >
+              <option value="upperRoman">大写罗马数字</option>
+              <option value="none">不显示</option>
+            </select>
+          </label>
+          {numberField("正文起始页", template.pageNumbering.bodyStart, readonly, (value) =>
+            patch({ pageNumbering: { ...template.pageNumbering, bodyStart: value } })
+          )}
+        </div>
+        {template.tableOfContents.enabled && (
+          <p className="hint">目录是 Word 字段。生成后请用 Word/WPS 打开并更新目录/域，页码才可靠。</p>
+        )}
+      </fieldset>
       <StyleFields label="正文" style={template.styles.body} readonly={readonly} onChange={(next) => patchStyle("body", next)} />
       <StyleFields label="论文标题" style={template.styles.title} readonly={readonly} onChange={(next) => patchStyle("title", next)} />
       <StyleFields label="一级标题" style={template.styles.heading1} readonly={readonly} onChange={(next) => patchStyle("heading1", next)} />
       <StyleFields label="二级标题" style={template.styles.heading2} readonly={readonly} onChange={(next) => patchStyle("heading2", next)} />
       <StyleFields label="三级标题" style={template.styles.heading3} readonly={readonly} onChange={(next) => patchStyle("heading3", next)} />
+      <StyleFields
+        label="目录标题"
+        style={template.tocTitle}
+        readonly={readonly}
+        onChange={(next) => patch({ tocTitle: { ...template.tocTitle, ...next } })}
+      />
 
       <h3>摘要与关键词</h3>
       <RichStyleFields
