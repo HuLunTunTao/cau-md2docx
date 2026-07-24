@@ -57,6 +57,22 @@ const a = 1;
     ]);
   });
 
+  it("recognizes Mermaid fenced blocks without changing other code blocks", () => {
+    const model = parseMarkdown(`\`\`\`mermaid
+flowchart TD
+  A[采样] --> B[记录]
+\`\`\`
+
+\`\`\`ts
+const sample = true;
+\`\`\``);
+
+    expect(model.nodes).toEqual([
+      { type: "mermaid", value: "flowchart TD\n  A[采样] --> B[记录]" },
+      { type: "code", language: "ts", value: "const sample = true;" }
+    ]);
+  });
+
   it("attaches figure captions from the paragraph immediately after an image", () => {
     const model = parseMarkdown(`![流程](images/flow.png)
 

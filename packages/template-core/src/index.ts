@@ -1,6 +1,7 @@
 import type {
   FormatTemplate,
   FormatTemplateValidationResult,
+  MermaidDiagramType,
   ParagraphStyle
 } from "@md2doc/shared";
 
@@ -12,6 +13,26 @@ const bodyStyle: ParagraphStyle = {
   lineSpacingPt: 20,
   firstLineIndentChars: 2,
   spacingAfterPt: 0
+};
+
+const defaultMermaidDiagramTypes: Record<MermaidDiagramType, boolean> = {
+  flowchart: true,
+  state: true,
+  class: true,
+  sequence: true,
+  er: true,
+  journey: true,
+  gantt: true,
+  pie: true,
+  mindmap: true,
+  timeline: true,
+  git: true,
+  quadrant: true,
+  xy: true,
+  sankey: true,
+  requirement: true,
+  block: true,
+  c4: true
 };
 
 export const cauCoursePaperTemplate: FormatTemplate = {
@@ -181,6 +202,11 @@ export const cauCoursePaperTemplate: FormatTemplate = {
     firstLineIndentChars: 0,
     spacingBeforePt: 0,
     spacingAfterPt: 12
+  },
+  mermaid: {
+    enabled: true,
+    academicMonochrome: true,
+    enabledDiagramTypes: defaultMermaidDiagramTypes
   }
 };
 
@@ -247,6 +273,7 @@ export function validateTemplate(template: unknown): FormatTemplateValidationRes
   if (!item.tableOfContents) errors.push("模板缺少目录设置。");
   if (!item.pageNumbering) errors.push("模板缺少页码设置。");
   if (!item.tocTitle) errors.push("模板缺少目录标题样式。");
+  if (!item.mermaid) errors.push("模板缺少 Mermaid 图表设置。");
 
   return { ok: errors.length === 0, errors };
 }
@@ -333,6 +360,14 @@ export function normalizeTemplate(template: Partial<FormatTemplate>): FormatTemp
     tocTitle: {
       ...structuredClone(cauCoursePaperTemplate.tocTitle),
       ...template.tocTitle
+    },
+    mermaid: {
+      ...structuredClone(cauCoursePaperTemplate.mermaid),
+      ...template.mermaid,
+      enabledDiagramTypes: {
+        ...structuredClone(cauCoursePaperTemplate.mermaid.enabledDiagramTypes),
+        ...template.mermaid?.enabledDiagramTypes
+      }
     }
   };
 }

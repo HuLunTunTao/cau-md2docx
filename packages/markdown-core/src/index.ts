@@ -47,6 +47,9 @@ function convertNode(node: MdNode): DocumentNode | DocumentNode[] | null {
     case "blockquote":
       return textNode("blockquote", toString(node));
     case "code":
+      if (node.lang?.trim().toLowerCase() === "mermaid") {
+        return { type: "mermaid", value: node.value ?? "" };
+      }
       return {
         type: "code",
         language: node.lang ?? undefined,
@@ -127,6 +130,14 @@ function attachCaptions(nodes: DocumentNode[]): DocumentNode[] {
       }
     }
     if (node.type === "image" && index + 1 < nodes.length) {
+      const next = nodes[index + 1];
+      if (next.type === "paragraph" && isFigureCaption(next.text)) {
+        result.push({ ...node, caption: next.text });
+        index += 1;
+        continue;
+      }
+    }
+    if (node.type === "mermaid" && index + 1 < nodes.length) {
       const next = nodes[index + 1];
       if (next.type === "paragraph" && isFigureCaption(next.text)) {
         result.push({ ...node, caption: next.text });

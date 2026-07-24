@@ -57,5 +57,7 @@ describe("template core", () => {
     expect(imported.headingNumbering.enabled).toBe(true);
     expect(imported.captionNumbering.figureEnabled).toBe(true);
     expect(imported.captionNumbering.tableEnabled).toBe(true);
+    expect(imported.mermaid.academicMonochrome).toBe(true);
+    expect(imported.mermaid.enabledDiagramTypes.flowchart).toBe(true);
   });
 });

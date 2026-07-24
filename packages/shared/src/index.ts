@@ -88,6 +88,31 @@ export interface PageNumberingStyle {
   bodyStart: number;
 }
 
+export type MermaidDiagramType =
+  | "flowchart"
+  | "state"
+  | "class"
+  | "sequence"
+  | "er"
+  | "journey"
+  | "gantt"
+  | "pie"
+  | "mindmap"
+  | "timeline"
+  | "git"
+  | "quadrant"
+  | "xy"
+  | "sankey"
+  | "requirement"
+  | "block"
+  | "c4";
+
+export interface MermaidStyle {
+  enabled: boolean;
+  academicMonochrome: boolean;
+  enabledDiagramTypes: Record<MermaidDiagramType, boolean>;
+}
+
 export interface FormatTemplate {
   schemaVersion: 1;
   id: string;
@@ -117,6 +142,7 @@ export interface FormatTemplate {
   tableOfContents: TableOfContentsStyle;
   pageNumbering: PageNumberingStyle;
   tocTitle: ParagraphStyle;
+  mermaid: MermaidStyle;
 }
 
 export interface FormatTemplateValidationResult {
@@ -129,6 +155,7 @@ export type DocumentNode =
   | { type: "paragraph"; text: string }
   | { type: "blockquote"; text: string }
   | { type: "code"; language?: string; value: string }
+  | { type: "mermaid"; value: string; caption?: string }
   | { type: "list"; ordered: boolean; items: string[] }
   | { type: "table"; rows: string[][]; caption?: string }
   | { type: "image"; alt: string; url: string; caption?: string };

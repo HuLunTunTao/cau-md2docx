@@ -1,4 +1,24 @@
-import type { Alignment, FormatTemplate, ParagraphStyle } from "@md2doc/shared";
+import type { Alignment, FormatTemplate, MermaidDiagramType, ParagraphStyle } from "@md2doc/shared";
+
+const mermaidDiagramLabels: Array<[MermaidDiagramType, string]> = [
+  ["flowchart", "流程图"],
+  ["state", "状态图"],
+  ["class", "类图"],
+  ["sequence", "时序图"],
+  ["er", "实体关系图"],
+  ["journey", "用户旅程图"],
+  ["gantt", "甘特图"],
+  ["pie", "饼图"],
+  ["mindmap", "思维导图"],
+  ["timeline", "时间线"],
+  ["git", "Git 图"],
+  ["quadrant", "象限图"],
+  ["xy", "XY 图"],
+  ["sankey", "桑基图"],
+  ["requirement", "需求图"],
+  ["block", "块图"],
+  ["c4", "C4 图"]
+];
 
 interface Props {
   template: FormatTemplate;
@@ -242,6 +262,55 @@ export function TemplateEditor({ template, onChange }: Props) {
         {template.tableOfContents.enabled && (
           <p className="hint">目录是 Word 字段。生成后请用 Word/WPS 打开并更新目录/域，页码才可靠。</p>
         )}
+      </fieldset>
+      <fieldset className="style-fields">
+        <legend>Mermaid 图表</legend>
+        <div className="grid four">
+          <label className="field checkbox-field">
+            <span>转换 Mermaid 图表</span>
+            <input
+              disabled={readonly}
+              type="checkbox"
+              checked={template.mermaid.enabled}
+              onChange={(event) => patch({ mermaid: { ...template.mermaid, enabled: event.target.checked } })}
+            />
+          </label>
+          <label className="field checkbox-field">
+            <span>论文黑白风格（强制覆盖）</span>
+            <input
+              disabled={readonly || !template.mermaid.enabled}
+              type="checkbox"
+              checked={template.mermaid.academicMonochrome}
+              onChange={(event) =>
+                patch({ mermaid: { ...template.mermaid, academicMonochrome: event.target.checked } })
+              }
+            />
+          </label>
+        </div>
+        <p className="hint">可按图型选择是否转换。未启用或渲染失败的 Mermaid 代码块会保留为代码文本。</p>
+        <div className="grid four">
+          {mermaidDiagramLabels.map(([type, label]) => (
+            <label className="field checkbox-field" key={type}>
+              <span>{label}</span>
+              <input
+                disabled={readonly || !template.mermaid.enabled}
+                type="checkbox"
+                checked={template.mermaid.enabledDiagramTypes[type]}
+                onChange={(event) =>
+                  patch({
+                    mermaid: {
+                      ...template.mermaid,
+                      enabledDiagramTypes: {
+                        ...template.mermaid.enabledDiagramTypes,
+                        [type]: event.target.checked
+                      }
+                    }
+                  })
+                }
+              />
+            </label>
+          ))}
+        </div>
       </fieldset>
       <StyleFields label="正文" style={template.styles.body} readonly={readonly} onChange={(next) => patchStyle("body", next)} />
       <StyleFields label="论文标题" style={template.styles.title} readonly={readonly} onChange={(next) => patchStyle("title", next)} />

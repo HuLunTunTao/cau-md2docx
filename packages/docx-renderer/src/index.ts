@@ -29,6 +29,7 @@ import type {
 } from "@md2doc/shared";
 import { charsToTwip, cmToTwip, ptToEighthPoint, ptToHalfPoint } from "@md2doc/shared";
 import { injectCover } from "./cover-inject";
+import { renderMermaidPng } from "./mermaid-renderer";
 
 const PAGE_WIDTH_CM = 21;
 const FALLBACK_PNG_1X1 = Uint8Array.from([
@@ -39,6 +40,7 @@ const FALLBACK_PNG_1X1 = Uint8Array.from([
 ]);
 
 export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
+  const resolved = await resolveMermaidNodes(input.model.nodes, input.template, input.assets);
   const context: RenderContext = {
     headingCounters: [0, 0, 0],
     figureCounter: 0,
@@ -47,7 +49,12 @@ export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
     tableChapterCounter: 0,
     section: undefined
   };
-  const sections = createDocumentSections(input, context);
+  const resolvedInput: RenderDocxInput = {
+    ...input,
+    model: { nodes: resolved.nodes },
+    assets: resolved.assets
+  };
+  const sections = createDocumentSections(resolvedInput, context);
 
   const doc = new Document({
     creator: input.metadata?.author,
@@ -63,6 +70,39 @@ export async function renderDocx(input: RenderDocxInput): Promise<Uint8Array> {
   const bytes = new Uint8Array(packed);
   const patched = await patchDocx(bytes, input.template);
   return input.coverBytes ? injectCover(patched, input.coverBytes) : patched;
+}
+
+async function resolveMermaidNodes(
+  nodes: DocumentNode[],
+  template: FormatTemplate,
+  assets: DocumentAsset[]
+): Promise<{ nodes: DocumentNode[]; assets: DocumentAsset[] }> {
+  const resolvedAssets = [...assets];
+  const resolvedNodes: DocumentNode[] = [];
+  let diagramIndex = 0;
+
+  for (const node of nodes) {
+    if (node.type !== "mermaid") {
+      resolvedNodes.push(node);
+      continue;
+    }
+    try {
+      const png = await renderMermaidPng(node.value, template.mermaid);
+      const path = `__md2doc_mermaid_${diagramIndex++}.png`;
+      resolvedAssets.push({
+        path,
+        fileName: path,
+        mimeType: "image/png",
+        data: png.data,
+        widthPx: png.widthPx,
+        heightPx: png.heightPx
+      });
+      resolvedNodes.push({ type: "image", alt: "Mermaid 图表", url: path, caption: node.caption });
+    } catch {
+      resolvedNodes.push({ type: "code", language: "mermaid", value: node.value });
+    }
+  }
+  return { nodes: resolvedNodes, assets: resolvedAssets };
 }
 
 function createDocumentSections(input: RenderDocxInput, context: RenderContext) {
@@ -274,6 +314,8 @@ function renderNode(
     case "blockquote":
       return [paragraph(node.text, { ...template.styles.body, firstLineIndentChars: 0 }, "BodyText", template)];
     case "code":
+      return renderCodeBlock(node.value, template);
+    case "mermaid":
       return renderCodeBlock(node.value, template);
     case "list":
       return node.items.map((item, index) =>

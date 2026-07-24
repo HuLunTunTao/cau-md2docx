@@ -20,11 +20,13 @@ export default defineConfig({
     ssr: "src/index.ts",
     target: "node20",
     emptyOutDir: false,
+    assetsInlineLimit: Number.MAX_SAFE_INTEGER,
     rollupOptions: {
       external: [/^node:/],
       output: {
         banner: "#!/usr/bin/env node",
-        entryFileNames: "md2doc-cli.mjs"
+        entryFileNames: "md2doc-cli.mjs",
+        inlineDynamicImports: true
       }
     }
   }
