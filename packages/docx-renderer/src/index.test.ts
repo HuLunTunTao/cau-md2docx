@@ -68,6 +68,20 @@ describe("renderDocx", () => {
     expect(extractStyle(stylesXml, "TableCaption")).toContain('w:jc w:val="center"');
   });
 
+  it("writes fixed DXA grid and cell widths for every table column", async () => {
+    const model: DocumentModel = {
+      nodes: [{ type: "table", rows: [["硬件", "型号", "用途", "说明"], ["无线模块", "ESP32", "负责设备通信", "用于课程设计现场测试"]] }]
+    };
+    const bytes = await renderDocx({ model, template: cauCoursePaperTemplate, assets: [] });
+    const zip = await JSZip.loadAsync(bytes);
+    const documentXml = await zip.file("word/document.xml")!.async("string");
+
+    expect(documentXml).toMatch(/<w:tblW w:type="dxa" w:w="\d+"\/>/);
+    expect(documentXml.match(/<w:gridCol w:w="\d+"\/>/g)).toHaveLength(4);
+    expect(documentXml.match(/<w:tcW w:type="dxa" w:w="\d+"\/>/g)).toHaveLength(8);
+    expect(documentXml).not.toContain('<w:gridCol w:w="100"');
+  });
+
   it("uses configurable latin and table fonts", async () => {
     const template = {
       ...cauCoursePaperTemplate,

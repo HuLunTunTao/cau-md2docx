@@ -288,8 +288,11 @@ function tocDisplayTitle(title: string): string {
 }
 
 function tocTabStopPosition(template: FormatTemplate): number {
-  const pageWidth = cmToTwip(PAGE_WIDTH_CM);
-  return pageWidth - cmToTwip(template.page.marginLeftCm) - cmToTwip(template.page.marginRightCm);
+  return contentWidthTwip(template);
+}
+
+function contentWidthTwip(template: FormatTemplate): number {
+  return cmToTwip(PAGE_WIDTH_CM) - cmToTwip(template.page.marginLeftCm) - cmToTwip(template.page.marginRightCm);
 }
 
 function renderNode(
@@ -621,6 +624,9 @@ function renderTableNode(
 }
 
 function renderTable(rows: string[][], template: FormatTemplate): Table {
+  const columnCount = Math.max(1, ...rows.map((row) => row.length));
+  const normalizedRows = rows.map((row) => Array.from({ length: columnCount }, (_, index) => row[index] ?? ""));
+  const columnWidths = calculateTableColumnWidths(normalizedRows, template);
   const borderNone = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
   const borderTop = {
     style: BorderStyle.SINGLE,
@@ -639,7 +645,8 @@ function renderTable(rows: string[][], template: FormatTemplate): Table {
   };
 
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: columnWidths.reduce((sum, width) => sum + width, 0), type: WidthType.DXA },
+    columnWidths,
     borders:
       template.table.mode === "grid"
         ? undefined
@@ -651,11 +658,12 @@ function renderTable(rows: string[][], template: FormatTemplate): Table {
             insideHorizontal: borderNone,
             insideVertical: borderNone
           },
-    rows: rows.map((row, rowIndex) =>
+    rows: normalizedRows.map((row, rowIndex) =>
       new TableRow({
         children: row.map(
-          (cell) =>
+          (cell, columnIndex) =>
             new TableCell({
+              width: { size: columnWidths[columnIndex], type: WidthType.DXA },
               borders:
                 template.table.mode === "three-line"
                   ? {
@@ -663,7 +671,7 @@ function renderTable(rows: string[][], template: FormatTemplate): Table {
                       bottom:
                         rowIndex === 0
                           ? borderHeader
-                          : rowIndex === rows.length - 1
+                          : rowIndex === normalizedRows.length - 1
                             ? borderBottom
                             : borderNone,
                       left: template.table.showVerticalBorders ? borderTop : borderNone,
@@ -682,6 +690,26 @@ function renderTable(rows: string[][], template: FormatTemplate): Table {
       })
     )
   });
+}
+
+function calculateTableColumnWidths(rows: string[][], template: FormatTemplate): number[] {
+  const tableWidth = contentWidthTwip(template);
+  const columnCount = rows[0]?.length ?? 1;
+  const weights = Array.from({ length: columnCount }, (_, columnIndex) => {
+    const longestCell = Math.max(...rows.map((row) => row[columnIndex].replace(/\s+/gu, "").length));
+    return Math.max(1, Math.sqrt(longestCell));
+  });
+  const minimumWidth = Math.floor(tableWidth * 0.12);
+  const minimumTotal = minimumWidth * columnCount;
+  if (minimumTotal >= tableWidth) {
+    const evenWidth = Math.floor(tableWidth / columnCount);
+    return Array.from({ length: columnCount }, (_, index) => index === columnCount - 1 ? tableWidth - evenWidth * (columnCount - 1) : evenWidth);
+  }
+  const distributableWidth = tableWidth - minimumTotal;
+  const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
+  const widths = weights.map((weight) => minimumWidth + Math.floor((distributableWidth * weight) / weightTotal));
+  widths[widths.length - 1] += tableWidth - widths.reduce((sum, width) => sum + width, 0);
+  return widths;
 }
 
 function renderImageNode(

@@ -57,6 +57,16 @@ const a = 1;
     ]);
   });
 
+  it("keeps escaped pipes inside a GFM table cell", () => {
+    const model = parseMarkdown(`| 项目 | 记录 |
+| --- | --- |
+| TCP 拆包 | 将 \`RDR1\\|PING\\|7\\n\` 分两次发送 |`);
+
+    expect(model.nodes).toMatchObject([
+      { type: "table", rows: [["项目", "记录"], ["TCP 拆包", "将 RDR1|PING|7\\n 分两次发送"]] }
+    ]);
+  });
+
   it("recognizes Mermaid fenced blocks without changing other code blocks", () => {
     const model = parseMarkdown(`\`\`\`mermaid
 flowchart TD
