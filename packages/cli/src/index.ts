@@ -5,7 +5,7 @@ import { renderDocx } from "@md2doc/docx-renderer";
 import { readZipDocumentPackage } from "@md2doc/document-package";
 import { parseMarkdown } from "@md2doc/markdown-core";
 import { getBuiltInTemplates, importTemplate } from "@md2doc/template-core";
-import { coverDocxBase64 } from "./generated/cover.js";
+import { coverDocxBase64 } from "./generated/cover";
 
 interface CliOptions {
   inputPath?: string;

@@ -9,7 +9,7 @@
   "scripts": {
     "build": "node scripts/inline-cover.mjs && tsc -b && vite build",
     "typecheck": "node scripts/inline-cover.mjs && tsc -b --pretty false",
-    "test": "vitest run src --passWithNoTests"
+    "test": "node scripts/inline-cover.mjs && vitest run src --passWithNoTests"
   },
   "dependencies": {
     "@md2doc/document-package": "workspace:*",
