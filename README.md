@@ -6,7 +6,7 @@
 
 将人工撰写的报告初稿和原始图片材料提供给能够读写文件、执行命令的 Agent 后，可直接使用下面的提示词让其整理并生成 Word 文档：
 
-```text
+````text
 请将我提供的报告初稿与图片材料整理为 Word 文档。以原稿内容、数据和结论为准，不要擅自扩写实验结果或改变观点。
 
 请整理一份可被“论文格式自动整理”工具稳定处理的 Markdown 文档，并按以下规则组织内容：
@@ -69,7 +69,7 @@ flowchart TD
     node md2doc-cli.mjs input.zip -o output.docx --cover
     bun md2doc-cli.mjs input.zip -o output.docx
 4. 完成后提供生成的 .docx 文件，并说明 Markdown 文件、图片目录、zip 文件和 Word 文件的位置；说明 Mermaid 图表已转换为 PNG（或列出保留为代码块的图表）。如果图片缺失或材料存在无法确认的内容，请明确列出，不要自行补造。
-```
+````
 
 ## 功能概览
 
