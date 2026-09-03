@@ -27,7 +27,9 @@
 14. 正文段落保持自然中文论文表达，避免使用 HTML。
 15. 普通代码使用 fenced code block；需要流程图、状态图、类图或时序图时，使用语言标记为 `mermaid` 的 fenced code block，并在其正下方写图题。不要把 Mermaid 预先截图为图片。
 16. Mermaid 图表会按所选模板的图型开关转换为 PNG，并采用模板设置的论文黑白风格；未启用或渲染失败时会保留为代码块。
-17. 如果用户选择了“CAU 课程论文（含目录页码）”模板，生成 Word 后必须提醒用户用 Word/WPS 打开并更新目录/域，目录页码才可靠。
+17. 默认使用“CAU 课程论文（含目录页码）”模板，并添加默认 CAU 课程论文封面。网页端请选择该模板并勾选“添加封面”；命令行请使用从网页导出的该模板 JSON，并追加 `--cover`。
+18. 如果用户明确表示不需要封面，网页端取消勾选“添加封面”；命令行省略 `--cover`。如果用户明确表示不需要目录和页码，网页端改选“CAU 课程论文”模板；命令行省略 `--template`，使用默认的无目录、无页码模板。
+19. 使用含目录页码模板生成 Word 后，必须提醒用户用 Word/WPS 打开并更新目录/域，目录条目和页码才可靠。
 
 示例：
 
@@ -64,11 +66,14 @@ flowchart TD
 1. 将 Markdown 文档和 images/ 目录压缩为一个 zip 文件，zip 中只能有一个 .md 或 .markdown 文档。
 2. 从以下固定地址下载最新独立命令行脚本，该脚本不需要 npm install 或额外安装依赖：
    https://huluntuntao.github.io/cau-md2docx/downloads/md2doc-cli.mjs
-3. 优先使用 Node.js 执行转换命令；如果环境只有 Bun，也可以使用 Bun。只有用户要求添加 CAU 默认封面时，才追加 `--cover`；如果用户提供自定义封面，使用 `--cover-file cover.docx`：
+3. 默认使用含目录页码模板并添加默认封面。先在网页中复制“CAU 课程论文（含目录页码）”模板并导出为 `toc-template.json`，然后优先使用 Node.js 执行；如果环境只有 Bun，也可以使用 Bun：
+    node md2doc-cli.mjs input.zip -o output.docx --template toc-template.json --cover
+    bun md2doc-cli.mjs input.zip -o output.docx --template toc-template.json --cover
+   如果用户提供自定义封面，将 `--cover` 改为 `--cover-file cover.docx`。
+4. 如果用户明确不需要封面，省略 `--cover`；如果用户明确不需要目录和页码，省略 `--template`，例如：
     node md2doc-cli.mjs input.zip -o output.docx
-    node md2doc-cli.mjs input.zip -o output.docx --cover
-    bun md2doc-cli.mjs input.zip -o output.docx
-4. 完成后提供生成的 .docx 文件，并说明 Markdown 文件、图片目录、zip 文件和 Word 文件的位置；说明 Mermaid 图表已转换为 PNG（或列出保留为代码块的图表）。如果图片缺失或材料存在无法确认的内容，请明确列出，不要自行补造。
+    node md2doc-cli.mjs input.zip -o output.docx --template toc-template.json
+5. 完成后提供生成的 .docx 文件，并说明 Markdown 文件、图片目录、zip 文件和 Word 文件的位置；说明 Mermaid 图表已转换为 PNG（或列出保留为代码块的图表）。如果图片缺失或材料存在无法确认的内容，请明确列出，不要自行补造。
 ````
 
 ## 功能概览
